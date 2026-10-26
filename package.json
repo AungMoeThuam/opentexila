@@ -1,0 +1,26 @@
+{
+  "name": "opentexila-frontend",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "vue": "^3.5.44",
+    "vue-router": "^4.6.4",
+    "bootstrap": "^5.3.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.10",
+    "vite": "^8.3.4",
+    "prettier": "^3.9.6"
+  },
+  "engines": {
+    "node": ">=22.15.1"
+  }
+}
