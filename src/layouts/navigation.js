@@ -2,7 +2,6 @@
 // `icon` must exist in src/shared/components/AppIcon.vue.
 // A group has `children` instead of `to`. Role-based filtering arrives with authentication.
 export default [
-  { label: 'Dashboard', icon: 'home', to: '/dashboard' },
   { label: 'Classrooms', icon: 'book', to: '/classrooms' },
   {
     label: 'Attendance',

@@ -3,7 +3,6 @@ import PublicLayout from '../layouts/PublicLayout.vue';
 import AppLayout from '../layouts/AppLayout.vue';
 import authRoutes from '../features/auth/routes';
 import attendanceRoutes from '../features/attendance/routes';
-import dashboardRoutes from '../features/dashboard/routes';
 
 export default createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,7 +33,7 @@ export default createRouter({
     {
       path: '/',
       component: AppLayout,
-      children: [...dashboardRoutes],
+      children: [],
     },
     ...attendanceRoutes,
     {

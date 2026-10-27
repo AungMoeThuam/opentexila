@@ -61,7 +61,7 @@ function toggleGroup(item) {
     <div class="ot-sidebar__head">
       <RouterLink
         class="ot-sidebar__brand text-decoration-none"
-        to="/dashboard"
+        to="/"
         @click="emit('close')"
       >
         <span class="ot-sidebar__brand-mark" aria-hidden="true">●</span>

@@ -59,7 +59,7 @@ const statuses = [
         <a href="#colors">Colors</a><a href="#type">Typography</a
         ><a href="#controls">Controls</a><a href="#states">States</a
         ><a href="#layout">Layout</a><a href="#tables">Tables</a>
-        <a href="#patterns">Dashboard patterns</a><a href="#shell">App shell</a>
+        <a href="#patterns">Page patterns</a><a href="#shell">App shell</a>
       </nav>
     </div>
 
@@ -326,7 +326,7 @@ const statuses = [
     </section>
     <section id="patterns" class="mb-5" aria-labelledby="patterns-title">
       <h2 id="patterns-title" class="ot-section-title mb-4">
-        07 · Dashboard patterns
+        07 · Page patterns
       </h2>
       <div class="ot-page-header">
         <div>
@@ -453,7 +453,7 @@ const statuses = [
           navy sidebar and a top bar. Do not build your own header or sidebar.
           Your page only fills the content area.
         </p>
-        <ul class="mb-3">
+        <ul class="mb-0">
           <li>Nav items live in <code>src/layouts/navigation.js</code>.</li>
           <li>
             Register routes as children of the AppLayout route in
@@ -467,9 +467,6 @@ const statuses = [
             that it opens a drawer.
           </li>
         </ul>
-        <RouterLink class="btn btn-outline-primary" to="/dashboard"
-          >Open sample dashboard</RouterLink
-        >
       </div>
     </section>
     <div class="ot-notice">
