@@ -1,0 +1,309 @@
+/* Shared, presentational patterns. Feature-specific selectors do not belong here. */
+.ot-page {
+  max-width: var(--ot-page-max);
+  margin-inline: auto;
+  padding: var(--ot-space-6) var(--ot-space-5);
+}
+.ot-brand {
+  color: var(--ot-brand);
+  font-size: var(--ot-text-brand);
+  font-weight: var(--ot-weight-bold);
+  letter-spacing: -0.025em;
+}
+.ot-brand:hover {
+  color: var(--ot-brand-hover);
+}
+.ot-eyebrow {
+  color: var(--ot-brand);
+  font-size: var(--ot-text-xs);
+  font-weight: var(--ot-weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: var(--ot-space-2);
+}
+.ot-page-title {
+  font-size: var(--ot-text-title);
+  font-weight: var(--ot-weight-bold);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  margin-bottom: var(--ot-space-3);
+}
+.ot-section-title {
+  font-size: var(--ot-text-xl);
+  font-weight: var(--ot-weight-semibold);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+.ot-subtitle {
+  color: var(--ot-muted);
+  margin-bottom: 0;
+}
+/* Page title row: title/subtitle on the left, actions (buttons) on the right. */
+.ot-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ot-space-4);
+  margin-bottom: var(--ot-space-5);
+}
+.ot-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ot-space-3);
+}
+.ot-card {
+  background: var(--ot-surface);
+  border: 1px solid var(--ot-border);
+  border-radius: var(--ot-radius-card);
+  padding: var(--ot-space-5);
+}
+.ot-card--live {
+  border-top: 4px solid var(--ot-brand);
+}
+/* Card heading row: icon + title on the left, optional "View all" link on the right. */
+.ot-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ot-space-3);
+  margin-bottom: var(--ot-space-4);
+}
+.ot-card__title {
+  display: flex;
+  align-items: center;
+  gap: var(--ot-space-2);
+  margin: 0;
+  font-size: var(--ot-text-lg);
+  font-weight: var(--ot-weight-semibold);
+}
+.ot-card__title svg {
+  flex: none;
+  color: var(--ot-muted);
+}
+.ot-card__link {
+  font-size: var(--ot-text-sm);
+  font-weight: var(--ot-weight-medium);
+  white-space: nowrap;
+}
+/* Greeting banner. Optional photo: style="--ot-hero-image: url(...)" on the element. */
+.ot-hero {
+  padding: var(--ot-space-6) var(--ot-space-5);
+  border: 1px solid var(--ot-border);
+  border-radius: var(--ot-radius-card);
+  background-color: var(--ot-surface);
+  background-image:
+    linear-gradient(
+      90deg,
+      var(--ot-surface) 0,
+      color-mix(in srgb, var(--ot-surface) 90%, transparent) 45%,
+      transparent 100%
+    ),
+    var(--ot-hero-image, none);
+  background-position: right center;
+  background-size: cover;
+}
+.ot-hero__greeting {
+  margin: 0;
+  color: var(--ot-muted);
+  font-size: var(--ot-text-lg);
+}
+.ot-hero__name {
+  margin: 0;
+  font-size: var(--ot-text-title);
+  font-weight: var(--ot-weight-bold);
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+.ot-hero__meta {
+  margin: var(--ot-space-1) 0 0;
+  color: var(--ot-muted);
+  font-size: var(--ot-text-sm);
+}
+/* Label / value list: <dl class="ot-dl"><div><dt>Label</dt><dd>Value</dd></div></dl> */
+.ot-dl {
+  display: grid;
+  gap: var(--ot-space-2);
+  margin: 0;
+  font-size: var(--ot-text-sm);
+}
+.ot-dl > div {
+  display: grid;
+  grid-template-columns: minmax(5rem, 8rem) 1fr;
+  gap: var(--ot-space-4);
+}
+.ot-dl dt {
+  color: var(--ot-muted);
+  font-weight: var(--ot-weight-regular);
+}
+.ot-dl dd {
+  margin: 0;
+  font-weight: var(--ot-weight-medium);
+}
+/* Status text always accompanies color. Use ot-status instead of Bootstrap bg-* badges. */
+.ot-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ot-space-2);
+  padding: var(--ot-space-1) var(--ot-space-3);
+  border-radius: var(--ot-radius-pill);
+  font-size: var(--ot-text-xs);
+  font-weight: var(--ot-weight-semibold);
+  line-height: var(--ot-line-height);
+  white-space: nowrap;
+  background: var(--ot-neutral-bg);
+  color: var(--ot-muted);
+}
+.ot-status--live {
+  background: var(--ot-tint);
+  color: var(--ot-info);
+}
+.ot-status--present {
+  background: var(--ot-success-bg);
+  color: var(--ot-success);
+}
+.ot-status--late {
+  background: var(--ot-warning-bg);
+  color: var(--ot-warning);
+}
+.ot-status--absent {
+  background: var(--ot-danger-bg);
+  color: var(--ot-danger);
+}
+.ot-status--pending,
+.ot-status--closed,
+.ot-status--upcoming {
+  background: var(--ot-neutral-bg);
+  color: var(--ot-muted);
+}
+.ot-notice {
+  padding: var(--ot-space-4);
+  border-radius: var(--ot-radius-notice);
+  background: var(--ot-tint);
+  color: var(--ot-info);
+  font-size: var(--ot-text-sm);
+}
+.ot-notice p {
+  margin-top: var(--ot-space-1);
+  margin-bottom: 0;
+  color: var(--ot-ink);
+}
+.ot-notice--success {
+  background: var(--ot-success-bg);
+  color: var(--ot-success);
+}
+.ot-notice--warning {
+  background: var(--ot-warning-bg);
+  color: var(--ot-warning);
+}
+.ot-notice--error {
+  background: var(--ot-danger-bg);
+  color: var(--ot-danger);
+}
+/*
+ * Collapsible notice, no JavaScript. Use a native <details>:
+ * <details class="ot-disclosure ot-disclosure--warning">
+ *   <summary class="ot-disclosure__summary">Title</summary>
+ *   <div class="ot-disclosure__body">Details</div>
+ * </details>
+ * Colour modifiers match ot-notice: (none = info), --success, --warning, --error.
+ */
+.ot-disclosure {
+  --ot-disclosure-bg: var(--ot-tint);
+  --ot-disclosure-fg: var(--ot-info);
+  border-radius: var(--ot-radius-notice);
+  background: var(--ot-disclosure-bg);
+  color: var(--ot-disclosure-fg);
+  font-size: var(--ot-text-sm);
+}
+.ot-disclosure--success {
+  --ot-disclosure-bg: var(--ot-success-bg);
+  --ot-disclosure-fg: var(--ot-success);
+}
+.ot-disclosure--warning {
+  --ot-disclosure-bg: var(--ot-warning-bg);
+  --ot-disclosure-fg: var(--ot-warning);
+}
+.ot-disclosure--error {
+  --ot-disclosure-bg: var(--ot-danger-bg);
+  --ot-disclosure-fg: var(--ot-danger);
+}
+.ot-disclosure__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--ot-space-3);
+  min-height: var(--ot-hit-target);
+  padding: var(--ot-space-2) var(--ot-space-4);
+  border-radius: var(--ot-radius-notice);
+  font-weight: var(--ot-weight-semibold);
+  list-style: none;
+  cursor: pointer;
+}
+.ot-disclosure__summary::-webkit-details-marker {
+  display: none;
+}
+.ot-disclosure__summary::after {
+  content: '';
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: 0 var(--ot-space-1) 0.2rem auto;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+.ot-disclosure[open] > .ot-disclosure__summary::after {
+  margin-bottom: 0;
+  transform: rotate(-135deg);
+}
+.ot-disclosure__body {
+  padding: 0 var(--ot-space-4) var(--ot-space-4);
+  color: var(--ot-ink);
+}
+.ot-meta {
+  color: var(--ot-muted);
+  font-size: var(--ot-text-sm);
+}
+.ot-empty {
+  text-align: center;
+  padding: var(--ot-space-7) var(--ot-space-5);
+}
+.ot-table {
+  --bs-table-bg: var(--ot-surface);
+  --bs-table-color: var(--ot-ink);
+  --bs-table-border-color: var(--ot-border);
+  --bs-table-hover-bg: var(--ot-canvas);
+  --bs-table-hover-color: var(--ot-ink);
+  font-size: var(--ot-text-sm);
+}
+.ot-table > :not(caption) > * > * {
+  padding: var(--ot-space-4);
+}
+.ot-table thead {
+  --bs-table-bg: var(--ot-canvas);
+  --bs-table-color: var(--ot-muted);
+}
+.ot-table th {
+  font-size: var(--ot-text-xs);
+  font-weight: var(--ot-weight-semibold);
+}
+
+@media (min-width: 992px) {
+  .ot-page {
+    padding: var(--ot-space-7);
+  }
+  .ot-hero {
+    padding: var(--ot-space-7) var(--ot-space-6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner-border,
+  .spinner-grow {
+    animation: none;
+  }
+  .ot-disclosure__summary::after {
+    transition: none;
+  }
+}

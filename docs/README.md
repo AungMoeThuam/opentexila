@@ -3,7 +3,7 @@
 ## Feature boundaries
 
 - `features/auth/`: future account activation, login/logout, invitations and shared identity state.
-- `features/attendance/`: future session management, location/code check-in and attendance history.
+- `features/attendance/`: future scheduled attendance, location check-in and attendance history.
 - `shared/`: generic UI and logic used across features. Shared code should not depend on individual features.
 - `router/`: assembles feature route arrays; access guards will be added with authentication.
 - `layouts/`: public and signed-in application shells.
@@ -11,6 +11,8 @@
 The current scaffold implements only the public shell, welcome page and not-found page. It does not simulate successful authentication or attendance.
 
 ## UI conventions
+
+Start with the [shared design system and team styling agreement](DESIGN_SYSTEM.md). Run the frontend and open `/style-guide` to see the actual theme, controls and responsive patterns. The route is development-only.
 
 Use Bootstrap grid classes for mobile-first page layouts and shared custom CSS for OpenTexila branding. Build reusable Vue components as needed. Use JavaScript `<script setup>` without TypeScript. Keep labels, keyboard focus and loading/error/empty states part of each feature's implementation.
 

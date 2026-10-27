@@ -8,7 +8,7 @@ import { RouterLink, RouterView } from 'vue-router';
   >
   <header class="border-bottom bg-white">
     <nav class="container py-3" aria-label="Main navigation">
-      <RouterLink class="brand text-decoration-none" :to="{ name: 'home' }"
+      <RouterLink class="ot-brand text-decoration-none" :to="{ name: 'home' }"
         >OpenTexila</RouterLink
       >
     </nav>

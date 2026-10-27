@@ -80,6 +80,8 @@ Vue Router uses HTML5 history. Production hosting must serve `index.html` for fr
 
 ## Documentation
 
+For shared styling, use the [OpenTexila design system](docs/DESIGN_SYSTEM.md). Run `npm run dev` and visit `/style-guide` for live examples using the same CSS as the app. Each member should reuse these patterns and keep feature CSS scoped.
+
 See [frontend structure and conventions](docs/README.md). API documentation is maintained in the backend repository under `docs/api/`; add a repository URL when it is published rather than copying endpoint definitions here.
 
 No test runner, Git repository or deployment integration was initialised by this setup.

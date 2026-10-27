@@ -1,0 +1,90 @@
+/* Shared design values. Review changes with the team before merging. */
+:root {
+  /* INTI red + navy (approved layout: collapsible side navigation, "design C"). */
+  --ot-brand: #d7141a;
+  --ot-brand-hover: #b01016;
+  --ot-brand-rgb: 215, 20, 26;
+  --ot-brand-tint: #fdecec;
+  --ot-navy: #0b1f3a;
+  --ot-navy-rgb: 11, 31, 58;
+  --ot-link: #1d5fd1;
+  --ot-link-hover: #1749a3;
+  --ot-link-rgb: 29, 95, 209;
+  --ot-link-hover-rgb: 23, 73, 163;
+  --ot-ink: #1e293b;
+  --ot-ink-rgb: 30, 41, 59;
+  --ot-muted: #5c6b7d;
+  --ot-muted-rgb: 92, 107, 125;
+  --ot-canvas: #f5f7fa;
+  --ot-canvas-rgb: 245, 247, 250;
+  --ot-surface: #ffffff;
+  --ot-border: #d8e0e7;
+  /* Informational (non-error) notices and "in progress" states. */
+  --ot-tint: #eaf1fb;
+  --ot-info: #17489e;
+  --ot-success: #176541;
+  --ot-success-bg: #e8f5ec;
+  --ot-warning: #805400;
+  --ot-warning-bg: #fff4d7;
+  --ot-danger: #a32936;
+  --ot-danger-bg: #fff0f1;
+  --ot-neutral-bg: #edf1f5;
+  --ot-focus: #0d6efd;
+  --ot-focus-rgb: 13, 110, 253;
+  /* The -rgb triplets above must be updated together with their hex colour. */
+
+  /* Use the same stack everywhere; no network font dependency. */
+  --ot-font-family:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ot-text-xs: 0.75rem;
+  --ot-text-sm: 0.875rem;
+  --ot-text-base: 1rem;
+  --ot-text-lg: 1.125rem;
+  --ot-text-md: 1.25rem;
+  --ot-text-xl: 1.5rem;
+  --ot-text-brand: 1.375rem;
+  --ot-text-title: clamp(1.75rem, 1.4rem + 1vw, 2.125rem);
+  --ot-line-height: 1.5;
+  --ot-weight-regular: 400;
+  --ot-weight-medium: 500;
+  --ot-weight-semibold: 600;
+  --ot-weight-bold: 700;
+
+  --ot-space-1: 0.25rem;
+  --ot-space-2: 0.5rem;
+  --ot-space-3: 0.75rem;
+  --ot-space-4: 1rem;
+  --ot-space-5: 1.5rem;
+  --ot-space-6: 2rem;
+  --ot-space-7: 3rem;
+  --ot-space-8: 4rem;
+  --ot-radius-control: 0.5rem;
+  --ot-radius-notice: 0.75rem;
+  --ot-radius-card: 1rem;
+  --ot-radius-pill: 999px;
+  --ot-control-height: 3rem;
+  /* Minimum touch target for compact controls (icon buttons, nav links). */
+  --ot-hit-target: 2.75rem;
+  --ot-avatar-size: 2.25rem;
+  --ot-icon-size: 1.25rem;
+  --ot-page-max: 80rem;
+  /* Keyboard focus ring for Bootstrap form controls. */
+  --ot-focus-ring: 0 0 0 0.2rem rgba(var(--ot-focus-rgb), 0.18);
+
+  /* App shell (sidebar + top bar). */
+  --ot-sidebar-bg: var(--ot-navy);
+  --ot-sidebar-text: #cbd5e1;
+  --ot-sidebar-text-strong: #ffffff;
+  --ot-sidebar-hover: rgba(255, 255, 255, 0.08);
+  --ot-sidebar-active: var(--ot-brand);
+  --ot-sidebar-border: rgba(255, 255, 255, 0.12);
+  --ot-sidebar-width: 16rem;
+  --ot-sidebar-width-collapsed: 4.5rem;
+  --ot-topbar-height: 4rem;
+  --ot-backdrop: rgba(var(--ot-navy-rgb), 0.5);
+
+  /* Stacking order. Sits between Bootstrap's sticky (1020) and modal (1055). */
+  --ot-z-topbar: 1020;
+  --ot-z-backdrop: 1035;
+  --ot-z-sidebar: 1040;
+}

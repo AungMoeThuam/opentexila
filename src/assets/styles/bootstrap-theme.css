@@ -1,0 +1,130 @@
+/* Loaded after Bootstrap. Root values alone do not recolor every Bootstrap component. */
+:root {
+  --bs-font-sans-serif: var(--ot-font-family);
+  --bs-body-font-family: var(--ot-font-family);
+  --bs-body-color: var(--ot-ink);
+  --bs-body-color-rgb: var(--ot-ink-rgb);
+  --bs-body-bg: var(--ot-canvas);
+  --bs-body-bg-rgb: var(--ot-canvas-rgb);
+  --bs-primary: var(--ot-brand);
+  --bs-primary-rgb: var(--ot-brand-rgb);
+  --bs-secondary-color: var(--ot-muted);
+  --bs-secondary-rgb: var(--ot-muted-rgb);
+  --bs-border-color: var(--ot-border);
+  --bs-link-color: var(--ot-link);
+  --bs-link-color-rgb: var(--ot-link-rgb);
+  --bs-link-hover-color: var(--ot-link-hover);
+  --bs-link-hover-color-rgb: var(--ot-link-hover-rgb);
+}
+
+.btn {
+  --bs-btn-border-radius: var(--ot-radius-control);
+  --bs-btn-font-size: var(--ot-text-sm);
+  --bs-btn-font-weight: var(--ot-weight-semibold);
+  --bs-btn-padding-x: var(--ot-space-5);
+  --bs-btn-padding-y: var(--ot-space-3);
+  min-height: var(--ot-control-height);
+}
+
+.btn-primary {
+  --bs-btn-color: var(--ot-surface);
+  --bs-btn-bg: var(--ot-brand);
+  --bs-btn-border-color: var(--ot-brand);
+  --bs-btn-hover-color: var(--ot-surface);
+  --bs-btn-hover-bg: var(--ot-brand-hover);
+  --bs-btn-hover-border-color: var(--ot-brand-hover);
+  --bs-btn-active-color: var(--ot-surface);
+  --bs-btn-active-bg: var(--ot-brand-hover);
+  --bs-btn-active-border-color: var(--ot-brand-hover);
+  --bs-btn-disabled-color: var(--ot-muted);
+  --bs-btn-disabled-bg: var(--ot-neutral-bg);
+  --bs-btn-disabled-border-color: var(--ot-border);
+  --bs-btn-disabled-opacity: 1;
+  --bs-btn-focus-shadow-rgb: var(--ot-focus-rgb);
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--ot-brand);
+  --bs-btn-bg: var(--ot-surface);
+  --bs-btn-border-color: var(--ot-border);
+  --bs-btn-hover-color: var(--ot-brand);
+  --bs-btn-hover-bg: var(--ot-brand-tint);
+  --bs-btn-hover-border-color: var(--ot-brand);
+  --bs-btn-active-color: var(--ot-brand);
+  --bs-btn-active-bg: var(--ot-brand-tint);
+  --bs-btn-active-border-color: var(--ot-brand);
+  --bs-btn-disabled-color: var(--ot-muted);
+  --bs-btn-disabled-border-color: var(--ot-border);
+  --bs-btn-focus-shadow-rgb: var(--ot-focus-rgb);
+}
+
+.form-control,
+.form-select {
+  min-height: var(--ot-control-height);
+  color: var(--ot-ink);
+  background-color: var(--ot-surface);
+  border-color: var(--ot-border);
+  border-radius: var(--ot-radius-control);
+}
+
+.form-control:focus,
+.form-select:focus {
+  color: var(--ot-ink);
+  background-color: var(--ot-surface);
+  border-color: var(--ot-focus);
+  box-shadow: var(--ot-focus-ring);
+}
+
+.form-control::placeholder {
+  color: var(--ot-muted);
+  opacity: 1;
+}
+.form-control:disabled,
+.form-select:disabled {
+  background-color: var(--ot-neutral-bg);
+}
+.form-label {
+  font-size: var(--ot-text-sm);
+  font-weight: var(--ot-weight-semibold);
+}
+.form-text {
+  color: var(--ot-muted);
+}
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: var(--ot-danger);
+}
+.invalid-feedback {
+  color: var(--ot-danger);
+}
+.form-control.is-valid,
+.form-select.is-valid {
+  border-color: var(--ot-success);
+}
+.valid-feedback {
+  color: var(--ot-success);
+}
+
+.form-check-input:checked {
+  background-color: var(--ot-brand);
+  border-color: var(--ot-brand);
+}
+.form-check-input:focus {
+  border-color: var(--ot-focus);
+  box-shadow: var(--ot-focus-ring);
+}
+.btn:focus-visible {
+  outline: 3px solid var(--ot-focus);
+  outline-offset: 3px;
+}
+
+.page-link {
+  color: var(--ot-brand);
+  background-color: var(--ot-surface);
+}
+.pagination {
+  --bs-pagination-active-bg: var(--ot-brand);
+  --bs-pagination-active-border-color: var(--ot-brand);
+  --bs-pagination-hover-color: var(--ot-brand-hover);
+  --bs-pagination-focus-color: var(--ot-brand);
+}

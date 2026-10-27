@@ -1,26 +1,23 @@
-:root {
-  font-family: system-ui, sans-serif;
-}
+@import './tokens.css';
+@import './bootstrap-theme.css';
+@import './components.css';
+@import './shell.css';
 
 body {
   margin: 0;
-  background: #f5f7fa;
-  color: #1e293b;
-}
-
-.brand {
-  color: #184e50;
-  font-size: 1.25rem;
-  font-weight: 700;
+  background: var(--ot-canvas);
+  color: var(--ot-ink);
+  font-family: var(--ot-font-family);
+  line-height: var(--ot-line-height);
 }
 
 .skip-link {
   display: block;
-  padding: 0.75rem 1rem;
-  background: #fff;
+  padding: var(--ot-space-3) var(--ot-space-4);
+  background: var(--ot-surface);
 }
 
 :focus-visible {
-  outline: 3px solid #0d6efd;
+  outline: 3px solid var(--ot-focus);
   outline-offset: 3px;
 }
