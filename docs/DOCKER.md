@@ -1,5 +1,13 @@
 # Frontend Docker setup
 
+## Run frontend, backend and MySQL together
+
+The backend repository now owns the shared development Compose setup. From that checkout, run `npm run stack:up`. It clones this frontend into `../frontend` if missing, preserves existing frontend work, applies pending database migrations, and starts both applications with hot reload. Open <http://localhost:5173>.
+
+Configure this workflow in **backend/.env**. It defaults to real API mode; use `FRONTEND_MOCK_AUTH=true` there for isolated UI development. Authentication APIs still need implementation for real login. Stop with `npm run stack:down` from backend; database data persists. See `backend/docs/DOCKER.md` in that checkout for the full guide.
+
+The commands below are for running the frontend separately. Avoid starting both setups on the same host ports.
+
 Run commands from the **frontend repository root**, not `src/`. Docker needs `package.json`, the lockfile, Vite configuration and `index.html` as well as the Vue source. Requires Docker Desktop (or Docker Engine with Compose).
 
 ## Production build
@@ -36,7 +44,7 @@ FRONTEND_MOCK_AUTH=false docker compose up --build frontend-dev
 
 The Nest backend must listen on an address reachable from Docker. Its default `HOST=127.0.0.1` may be unreachable from a container; if needed set backend `HOST=0.0.0.0` and restart it. That widens the backend's listen address, so use the appropriate local firewall/network settings. No backend configuration is changed by this setup.
 
-If the backend later runs in Docker, attach both services to a shared Docker network and set `FRONTEND_API_UPSTREAM=http://backend-service-name:3000`. Separate Compose projects do not automatically share service-name DNS.
+The shared backend Compose setup already connects both applications on one network. When using this standalone frontend Compose file instead, keep its host proxy target to reach the backend's published port. Separate Compose projects do not automatically share service-name DNS.
 
 `FRONTEND_API_UPSTREAM` must be an HTTP(S) origin with no path or trailing slash (for example `http://host.docker.internal:3000`). `/api/v1` is preserved by the proxy. Backend cookies should omit `Domain` so they apply to the browser-facing host. Cookie security and trusted proxy configuration must be agreed with the auth developer. Deployed location check-in and secure cookies require HTTPS; put this HTTP container behind your deployment's TLS ingress and configure forwarded headers/trust appropriately.
 
