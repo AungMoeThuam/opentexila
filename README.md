@@ -27,6 +27,8 @@ Open `http://127.0.0.1:5173`. The public home page works without the backend. Fo
 
 ## Commands
 
+Docker is also available: `docker compose up --build -d frontend` serves the production build at `http://localhost:8080`; `docker compose up --build frontend-dev` starts hot reload and mock auth at `http://localhost:5173`. See the [Docker guide](docs/DOCKER.md) for backend connections, ports and environment settings.
+
 | Command                | Purpose                                                    |
 | ---------------------- | ---------------------------------------------------------- |
 | `npm run dev`          | Start the local Vite server.                               |

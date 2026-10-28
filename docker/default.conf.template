@@ -1,0 +1,46 @@
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+    server_tokens off;
+
+    # Resolve lazily so the frontend can start before its API is available.
+    # Docker Compose supplies this DNS resolver on its private network.
+    resolver 127.0.0.11 valid=30s ipv6=off;
+    set $api_upstream "${API_UPSTREAM}";
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location = /api {
+        return 308 /api/$is_args$args;
+    }
+
+    location ^~ /api/ {
+        # Preserve the complete /api/v1/... path and query string.
+        proxy_pass $api_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 60s;
+        add_header Cache-Control "no-store" always;
+    }
+
+    location ^~ /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location / {
+        # Vue Router HTML5 history: refreshing a feature URL serves the app.
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache" always;
+    }
+}

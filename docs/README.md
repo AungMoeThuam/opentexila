@@ -1,5 +1,7 @@
 # Frontend documentation
 
+- [Docker setup](DOCKER.md): production image, hot reload, backend proxy and configuration.
+
 - [Frontend foundation](FRONTEND_FOUNDATION.md): start here for feature ownership, routes, identity, mock mode, API client and shared UI behaviour.
 - [Design system](DESIGN_SYSTEM.md): tokens, Bootstrap classes, patterns and team styling rules.
 
