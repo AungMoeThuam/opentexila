@@ -2,6 +2,8 @@
 
 This is the shared styling reference for every frontend member. It follows the approved INTI red and navy layout with a collapsible side navigation ("design C"). It covers presentation; it does not implement authentication, geolocation, schedules or attendance rules.
 
+See [Frontend foundation](FRONTEND_FOUNDATION.md) for route ownership, mock users, API usage and shared feedback components.
+
 ## Start here
 
 1. Pull the latest frontend branch and run `npm ci` if dependencies changed.
@@ -13,19 +15,19 @@ The style guide uses the app’s real CSS, rather than a separate copied stylesh
 
 ## Shared files and boundaries
 
-| File                                    | Responsibility                                                     |
-| --------------------------------------- | ------------------------------------------------------------------ |
-| `src/assets/styles/tokens.css`          | Colors, font stack, type sizes, spacing, radii and control height  |
-| `src/assets/styles/bootstrap-theme.css` | Brand styling for Bootstrap buttons, fields, tables and pagination |
-| `src/assets/styles/components.css`      | Reusable `ot-*` presentation classes for pages                     |
-| `src/assets/styles/shell.css`           | Sidebar, top bar and nav. Used by `AppLayout` only                 |
-| `src/assets/styles/main.css`            | Imports the theme; minimal body, focus and skip-link styles        |
-| `src/shared/pages/StyleGuidePage.vue`   | Visual reference for shared patterns and states                    |
-| `src/layouts/AppLayout.vue`             | Signed-in shell: collapsible sidebar, top bar, content area        |
-| `src/layouts/navigation.js`             | Sidebar menu items (shared; change in one PR)                      |
-| `src/shared/components/AppSidebar.vue`  | Sidebar component. `AppIcon.vue` is the single shared icon set     |
-| `src/shared/components/`                | Reusable Vue components when shared behavior is needed             |
-| `src/features/<feature>/`               | Feature pages, state, behavior and scoped feature styles           |
+| File                                    | Responsibility                                                      |
+| --------------------------------------- | ------------------------------------------------------------------- |
+| `src/assets/styles/tokens.css`          | Colors, font stack, type sizes, spacing, radii and control height   |
+| `src/assets/styles/bootstrap-theme.css` | Brand styling for Bootstrap buttons, fields, tables and pagination  |
+| `src/assets/styles/components.css`      | Reusable `ot-*` presentation classes for pages                      |
+| `src/assets/styles/shell.css`           | Sidebar, top bar and nav. Used by `AppLayout` only                  |
+| `src/assets/styles/main.css`            | Imports the theme; minimal body, focus and skip-link styles         |
+| `src/shared/pages/StyleGuidePage.vue`   | Visual reference for shared patterns and states                     |
+| `src/layouts/AppLayout.vue`             | Signed-in shell: collapsible sidebar, top bar, content area         |
+| `src/layouts/navigation.js`             | Sidebar menu items (shared; change in one PR)                       |
+| `src/shared/components/AppSidebar.vue`  | Sidebar component. `AppIcon.vue` is the single shared icon set      |
+| `src/shared/components/`                | Shared icons, request states, confirmation dialog and notifications |
+| `src/features/<feature>/`               | Feature pages, state, behavior and scoped feature styles            |
 
 `main.js` loads Bootstrap CSS **once**, then `main.css`. Do not import Bootstrap again inside a component, add a CDN copy, or introduce another UI library. Use JavaScript `<script setup>`, not TypeScript.
 
@@ -160,7 +162,9 @@ Signed-in pages render inside `AppLayout`. Do not add your own header or sidebar
 - **Top bar:** white with a menu button and a user placeholder that authentication will fill in. `.ot-search` (page search) and `.ot-icon-btn__dot` (unread dot for a bell) are available for the shell; feature pages do not use them.
 - **Add a page:** add a child route to the `AppLayout` route in `src/router/index.js`, and an item in `src/layouts/navigation.js` if it needs a menu entry. Menu changes are shared-file changes, so follow the process below.
 - **Icons:** only the inline set in `AppIcon.vue`. Add icons there, not from another library.
-- **Not built yet:** role-based menu filtering and the route guard. These arrive with authentication.
+- **Access:** role-based menu filtering and route guards use the shared auth state. The top bar reads the same user and provides sign-out. Actual authentication backend endpoints and feature pages are still pending.
+- **Mobile focus:** the drawer uses native `<dialog>` with modal focus containment, Escape/backdrop dismissal, background scroll lock and focus restoration. A closed drawer is excluded from keyboard navigation.
+- **Shared feedback:** use `RequestState`, `ConfirmDialog` and the `notify` helper rather than separate copies per feature. `/dev/example` demonstrates them in mock mode.
 
 ## Working together without styling conflicts
 

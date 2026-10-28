@@ -1,10 +1,14 @@
+import { watch } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import PublicLayout from '../layouts/PublicLayout.vue';
 import AppLayout from '../layouts/AppLayout.vue';
-import authRoutes from '../features/auth/routes';
+import { publicAuthRoutes, protectedAuthRoutes } from '../features/auth/routes';
+import enrolmentRoutes from '../features/enrolments/routes';
 import attendanceRoutes from '../features/attendance/routes';
+import { auth } from '../app-context';
+import { createAccessGuard } from './access';
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     ...(import.meta.env.DEV
@@ -25,17 +29,38 @@ export default createRouter({
           name: 'home',
           component: () => import('../shared/pages/WelcomePage.vue'),
         },
-        ...authRoutes,
+        ...publicAuthRoutes,
+        {
+          path: 'session-unavailable',
+          name: 'session-unavailable',
+          component: () => import('../shared/pages/SessionUnavailablePage.vue'),
+        },
       ],
     },
-    // Signed-in pages render inside AppLayout. Add feature routes as children;
-    // an auth guard will be added with authentication.
     {
       path: '/',
       component: AppLayout,
-      children: [],
+      meta: { requiresAuth: true },
+      children: [
+        ...protectedAuthRoutes,
+        ...enrolmentRoutes,
+        ...attendanceRoutes,
+        {
+          path: 'forbidden',
+          name: 'forbidden',
+          component: () => import('../shared/pages/ForbiddenPage.vue'),
+        },
+        ...(import.meta.env.DEV
+          ? [
+              {
+                path: 'dev/example',
+                name: 'example',
+                component: () => import('../dev/ExamplePage.vue'),
+              },
+            ]
+          : []),
+      ],
     },
-    ...attendanceRoutes,
     {
       path: '/:pathMatch(.*)*',
       component: PublicLayout,
@@ -52,3 +77,17 @@ export default createRouter({
     return { top: 0 };
   },
 });
+router.beforeEach(createAccessGuard(auth));
+// An expired session must also clear a page already being displayed.
+watch(
+  () => auth.state.status,
+  (status) => {
+    if (status === 'guest' && router.currentRoute.value.meta.requiresAuth) {
+      router.replace({
+        name: 'login',
+        query: { redirect: router.currentRoute.value.fullPath },
+      });
+    }
+  },
+);
+export default router;

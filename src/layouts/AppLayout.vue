@@ -1,6 +1,8 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { RouterView, useRoute } from 'vue-router';
+import { RouterView, useRoute, useRouter } from 'vue-router';
+import { auth } from '../app-context';
+import { notify } from '../shared/composables/notifications';
 import AppIcon from '../shared/components/AppIcon.vue';
 import AppSidebar from '../shared/components/AppSidebar.vue';
 
@@ -15,6 +17,20 @@ function readCollapsed() {
 }
 
 const route = useRoute();
+const router = useRouter();
+const mobile = ref(window.matchMedia('(max-width: 991.98px)').matches);
+const signingOut = ref(false);
+async function signOut() {
+  signingOut.value = true;
+  try {
+    await auth.logout();
+    await router.replace('/login');
+  } catch (error) {
+    notify(error.message, 'error');
+  } finally {
+    signingOut.value = false;
+  }
+}
 const collapsed = ref(readCollapsed());
 const mobileOpen = ref(false);
 
@@ -42,12 +58,16 @@ function toggleNavigation() {
   }
 }
 
-function onKeydown(event) {
-  if (event.key === 'Escape') mobileOpen.value = false;
+let breakpoint;
+function onBreakpoint(event) {
+  mobile.value = event.matches;
+  mobileOpen.value = false;
 }
-
-onMounted(() => window.addEventListener('keydown', onKeydown));
-onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
+onMounted(() => {
+  breakpoint = window.matchMedia('(max-width: 991.98px)');
+  breakpoint.addEventListener('change', onBreakpoint);
+});
+onBeforeUnmount(() => breakpoint?.removeEventListener('change', onBreakpoint));
 </script>
 
 <template>
@@ -56,7 +76,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
   >
   <div class="ot-shell">
     <AppSidebar
-      :collapsed="collapsed"
+      :collapsed="!mobile && collapsed"
+      :mobile="mobile"
+      :role="auth.state.user?.role"
       :open="mobileOpen"
       @close="mobileOpen = false"
       @expand="collapsed = false"
@@ -67,21 +89,34 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
           type="button"
           class="ot-icon-btn"
           aria-controls="app-sidebar"
-          :aria-expanded="mobileOpen || !collapsed"
+          :aria-expanded="mobile ? mobileOpen : !collapsed"
           aria-label="Toggle navigation"
           @click="toggleNavigation"
         >
           <AppIcon name="menu" />
         </button>
         <span class="ot-topbar__spacer"></span>
-        <!-- Placeholder until authentication supplies the signed-in user. -->
         <div class="ot-user">
-          <span class="ot-user__avatar" aria-hidden="true">OT</span>
+          <span class="ot-user__avatar" aria-hidden="true">{{
+            auth.state.user?.name.slice(0, 1)
+          }}</span>
           <span class="d-none d-sm-block">
-            <span class="ot-user__name">Signed-in user</span>
-            <span class="ot-user__role">Role</span>
+            <span class="ot-user__name">{{ auth.state.user?.name }}</span>
+            <span class="ot-user__role">{{
+              auth.state.user?.role === 'teacher'
+                ? 'Lecturer'
+                : auth.state.user?.role
+            }}</span>
           </span>
         </div>
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          :disabled="signingOut"
+          @click="signOut"
+        >
+          {{ signingOut ? 'Signing out…' : 'Sign out' }}
+        </button>
       </header>
       <main id="main-content" class="ot-shell__content ot-page" tabindex="-1">
         <RouterView />

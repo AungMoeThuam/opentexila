@@ -449,6 +449,12 @@ const statuses = [
       <h2 id="shell-title" class="ot-section-title mb-4">08 · App shell</h2>
       <div class="ot-card">
         <p>
+          For working request states, forms, notifications and confirmation
+          dialogs, open the
+          <RouterLink to="/dev/example">development example</RouterLink>. Enable
+          mock mode and select a role to use it without a backend.
+        </p>
+        <p>
           Signed-in pages render inside <code>AppLayout</code>: a collapsible
           navy sidebar and a top bar. Do not build your own header or sidebar.
           Your page only fills the content area.

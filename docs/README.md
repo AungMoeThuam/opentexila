@@ -1,27 +1,12 @@
 # Frontend documentation
 
-## Feature boundaries
+- [Frontend foundation](FRONTEND_FOUNDATION.md): start here for feature ownership, routes, identity, mock mode, API client and shared UI behaviour.
+- [Design system](DESIGN_SYSTEM.md): tokens, Bootstrap classes, patterns and team styling rules.
 
-- `features/auth/`: future account activation, login/logout, invitations and shared identity state.
-- `features/attendance/`: future scheduled attendance, location check-in and attendance history.
-- `shared/`: generic UI and logic used across features. Shared code should not depend on individual features.
-- `router/`: assembles feature route arrays; access guards will be added with authentication.
-- `layouts/`: public and signed-in application shells.
+Authentication owns identity and account pages; enrolments owns membership/rosters; attendance owns scheduled check-in/history. Each member implements their pages and related backend APIs. Root wiring assembles feature routes and services; shared presentation components stay independent of feature business logic.
 
-The current scaffold implements only the public shell, welcome page and not-found page. It does not simulate successful authentication or attendance.
+Feature pages remain placeholders. Mock users and the example roster are explicitly development-only; they do not authenticate against the backend, enrol students or award attendance.
 
-## UI conventions
+Backend endpoint definitions belong in the backend repository under `docs/api/`. The foundation guide records the frontend's required session/CSRF contract, which is also documented in backend `docs/api/auth.md`.
 
-Start with the [shared design system and team styling agreement](DESIGN_SYSTEM.md). Run the frontend and open `/style-guide` to see the actual theme, controls and responsive patterns. The route is development-only.
-
-Use Bootstrap grid classes for mobile-first page layouts and shared custom CSS for OpenTexila branding. Build reusable Vue components as needed. Use JavaScript `<script setup>` without TypeScript. Keep labels, keyboard focus and loading/error/empty states part of each feature's implementation.
-
-Keep feature state near its pages and composables. Auth will own shared identity/session state. Do not store passwords, session cookies or student coordinates in local storage.
-
-## API documentation
-
-The backend repository owns endpoint definitions in `docs/api/README.md`, `docs/api/auth.md` and `docs/api/attendance.md`. Link to the published backend repository when its URL is available. This repository documents only frontend usage and UI behaviour.
-
-## Verification
-
-Run the production build and formatting check for scaffold changes. Check the rendered welcome/not-found pages and responsive layout when changing the shell. Add meaningful feature and integration tests when authentication and attendance are implemented; the `tests/` folder is currently a placeholder.
+Run `npm test`, `npm run build` and `npm run format:check`, then verify affected pages in the browser, including keyboard and mobile behaviour.

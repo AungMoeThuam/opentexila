@@ -1,18 +1,34 @@
-// Sidebar items for AppLayout. Add or rename entries in one shared PR.
-// `icon` must exist in src/shared/components/AppIcon.vue.
-// A group has `children` instead of `to`. Role-based filtering arrives with authentication.
-export default [
-  { label: 'Classrooms', icon: 'book', to: '/classrooms' },
+// UI visibility only. Backend endpoints enforce permissions independently.
+const navigation = [
+  { label: 'My classes', icon: 'book', to: '/my-classes', roles: ['student'] },
+  {
+    label: 'Enrolments',
+    icon: 'users',
+    to: '/enrolments',
+    roles: ['admin', 'teacher'],
+  },
   {
     label: 'Attendance',
     icon: 'check',
+    roles: ['student'],
     children: [
       { label: "Today's classes", to: '/attendance' },
-      { label: 'History', to: '/attendance/history' },
+      { label: 'My history', to: '/attendance/history' },
     ],
   },
-  { label: 'Assignments', icon: 'file', to: '/assignments' },
-  { label: 'Resources', icon: 'folder', to: '/resources' },
-  { label: 'Announcements', icon: 'bell', to: '/announcements' },
-  { label: 'Users', icon: 'users', to: '/users' },
+  {
+    label: 'Class attendance',
+    icon: 'check',
+    to: '/attendance/classes',
+    roles: ['teacher', 'admin'],
+  },
+  {
+    label: 'Account invitations',
+    icon: 'users',
+    to: '/admin/invitations',
+    roles: ['admin'],
+  },
 ];
+export function navigationForRole(role) {
+  return navigation.filter((item) => item.roles.includes(role));
+}

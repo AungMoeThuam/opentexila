@@ -1,4 +1,44 @@
 /* Shared, presentational patterns. Feature-specific selectors do not belong here. */
+.ot-dialog {
+  width: min(32rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  color: var(--ot-ink);
+}
+.ot-dialog::backdrop {
+  background: var(--ot-backdrop);
+}
+.ot-notifications {
+  position: fixed;
+  inset: auto var(--ot-space-4) var(--ot-space-4) auto;
+  width: min(26rem, calc(100% - 2rem));
+  z-index: var(--ot-z-notification);
+  display: grid;
+  gap: var(--ot-space-3);
+  pointer-events: none;
+}
+.ot-notification {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ot-space-3);
+  border: 1px solid var(--ot-border);
+  pointer-events: auto;
+  overflow-wrap: anywhere;
+}
+.ot-dev-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ot-space-3);
+  padding: var(--ot-space-3) var(--ot-space-4);
+  background: var(--ot-warning-bg);
+  color: var(--ot-warning);
+  font-size: var(--ot-text-sm);
+}
+.ot-dev-toolbar .form-select {
+  width: auto;
+}
 .ot-page {
   max-width: var(--ot-page-max);
   margin-inline: auto;

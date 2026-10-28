@@ -35,6 +35,21 @@
 .ot-sidebar.is-open {
   transform: none;
 }
+/* Native modal drawer supplies focus containment, background inertness and
+   focus restoration. A closed mobile drawer must not stay keyboard-focusable. */
+dialog.ot-sidebar {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  height: 100dvh;
+  max-height: none;
+}
+dialog.ot-sidebar:not([open]) {
+  display: none;
+}
+dialog.ot-sidebar::backdrop {
+  background: var(--ot-backdrop);
+}
 .ot-sidebar-backdrop {
   position: fixed;
   inset: 0;
@@ -68,7 +83,7 @@
   color: var(--ot-brand);
 }
 .ot-sidebar__close {
-  color: var(--ot-sidebar-text);
+  color: var(--ot-sidebar-text-strong);
 }
 .ot-nav {
   list-style: none;
@@ -167,6 +182,12 @@
 }
 .ot-icon-btn:hover {
   background: var(--ot-canvas);
+}
+.ot-sidebar .ot-sidebar__close {
+  color: var(--ot-sidebar-text-strong);
+}
+.ot-sidebar .ot-sidebar__close:hover {
+  background: var(--ot-sidebar-hover);
 }
 /* Unread dot for a bell. Always pair with visually hidden text, e.g. "3 unread". */
 .ot-icon-btn__dot {
