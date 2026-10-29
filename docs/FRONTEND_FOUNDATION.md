@@ -1,6 +1,10 @@
 # Shared frontend foundation
 
+For the proposed `/student`, `/lecturer` and `/admin` page structure, see [Pages and routes](PAGES_AND_ROUTES.md). Paths in this foundation guide describe the existing scaffold; the role-prefix migration has not been implemented.
+
 Start here before implementing authentication, enrolments or attendance pages. The theme stays red/navy, Bootstrap 5 and JavaScript. This foundation supplies integration patterns; feature pages and backend business rules still need implementation.
+
+The backend names its entities `Course`, `Class`, `Enrolment`, `ClassSession` and `AttendanceRecord`. Existing scaffold parameters `classId` and `meetingId` / `sessionId` refer to `classes.id` (`classId`) and `class_sessions.id` (`classSessionId`). They do not refer to login sessions. New routes in the page catalogue use `classId` and `classSessionId`, with matching kebab-case resource paths (`classes` and `class-sessions`). No router changes are included in this documentation update.
 
 ## Run without the backend
 
@@ -18,7 +22,7 @@ To integrate with the backend, set the flag to `false` and restart Vite. A backe
 
 | Owner / feature               | Route file                          | Initial page slots                                                                                                                |
 | ----------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Aung Moe Thu / authentication | `src/features/auth/routes.js`       | `/login`, `/activate`, `/admin/invitations`                                                                                       |
+| Aung Moe Thu / authentication | `src/features/auth/routes.js`       | `/login`, `/change-password`, `/admin/users`                                                                                      |
 | Kar You Chia / enrolments     | `src/features/enrolments/routes.js` | `/my-classes`, `/enrolments`, `/enrolments/:classId`                                                                              |
 | Show Wai Yan / attendance     | `src/features/attendance/routes.js` | `/attendance`, `/attendance/meetings/:meetingId`, `/attendance/history`, `/attendance/classes`, `/attendance/sessions/:sessionId` |
 
@@ -66,12 +70,12 @@ Pass an AbortController's `signal` to `api.request` and abort on unmount or supe
 
 The frontend expects this **backend integration contract** (not yet implemented):
 
-| Endpoint            | Expected response                                                                                                                   |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /auth/csrf`    | `{ "data": { "csrfToken": "opaque-token" } }`; initialize cookie session if needed                                                  |
-| `GET /auth/me`      | `{ "data": { "id": 1, "name": "Demo", "email": "demo@example.test", "role": "student", "status": "active" } }`; 401 when signed out |
-| `POST /auth/login`  | Same safe profile envelope; rotate server session cookie                                                                            |
-| `POST /auth/logout` | `204 No Content`; destroy server session                                                                                            |
+| Endpoint            | Expected response                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /auth/csrf`    | `{ "data": { "csrfToken": "opaque-token" } }`; initialize cookie session if needed                                                                                 |
+| `GET /auth/me`      | `{ "data": { "id": 1, "name": "Demo", "email": "demo@example.test", "role": "student", "status": "active", "must_change_password": false } }`; 401 when signed out |
+| `POST /auth/login`  | Same safe profile envelope; rotate server session cookie                                                                                                           |
+| `POST /auth/logout` | `204 No Content`; destroy server session                                                                                                                           |
 
 Paths are relative to `/api/v1`. CSRF request header: `X-CSRF-Token`. Invalid CSRF: 403 with `error.code: "CSRF_INVALID"`. For field errors, use a field-name-to-message map. This contract is recorded in backend `docs/api/auth.md`; change it with the auth owner in both repositories. Prefer same-origin hosting via the Vite development proxy and a production reverse proxy. Cross-origin hosting requires coordinated CORS, credentials and cookie settings.
 
