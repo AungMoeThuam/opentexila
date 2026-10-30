@@ -13,7 +13,7 @@ export function useLecturerSessions({ service, limit = 20 }) {
   const error = ref(null);
   const filterError = ref('');
 
-  const knownClasses = new Map();
+  const knownClasses = reactive(new Map());
   const classOptions = computed(() =>
     [...knownClasses.values()].sort((a, b) => a.label.localeCompare(b.label)),
   );

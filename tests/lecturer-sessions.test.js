@@ -315,3 +315,17 @@ test('classOptions accumulate across loads and stay after a class-filtered load'
     'SWE30003 Software Architectures and Design (Section B)',
   );
 });
+
+test('classOptions updates when read before the first load', async () => {
+  const service = fakeService(async () =>
+    pageOf([sessionFor(1, CLASS_1), sessionFor(2, CLASS_2)]),
+  );
+  const lecturer = useLecturerSessions({ service });
+
+  assert.deepEqual(lecturer.classOptions.value, []);
+  await lecturer.load();
+  assert.deepEqual(
+    lecturer.classOptions.value.map((option) => option.value),
+    ['1', '2'],
+  );
+});
