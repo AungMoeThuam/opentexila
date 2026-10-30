@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   formatDate,
   formatSessionWindow,
+  formatTime,
 } from '../src/shared/utils/format-datetime.js';
 import {
   AVAILABILITY_STATUS,
@@ -72,4 +73,24 @@ test('availability map covers the four values and falls back to the raw string',
     label: 'constructor',
     modifier: 'closed',
   });
+});
+
+test('formatTime renders 24-hour Kuala Lumpur wall-clock time', () => {
+  assert.equal(formatTime('2026-10-29T01:00:00Z'), '09:00');
+  assert.equal(formatTime('2026-10-29T15:05:00Z'), '23:05');
+  assert.equal(formatTime('2026-10-29T16:00:00Z'), '00:00');
+});
+
+test('formatTime accepts a custom time zone and locale', () => {
+  assert.equal(
+    formatTime('2026-10-29T01:00:00Z', { timeZone: 'UTC' }),
+    '01:00',
+  );
+});
+
+test('formatTime returns an em dash for missing or invalid input', () => {
+  assert.equal(formatTime(null), '—');
+  assert.equal(formatTime(undefined), '—');
+  assert.equal(formatTime(''), '—');
+  assert.equal(formatTime('not-a-date'), '—');
 });

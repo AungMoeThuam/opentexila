@@ -4,6 +4,8 @@ import { computed } from 'vue';
 const props = defineProps({
   meta: { type: Object, default: null },
   disabled: { type: Boolean, default: false },
+  noun: { type: String, default: 'session' },
+  label: { type: String, default: 'Class sessions pages' },
 });
 
 const emit = defineEmits(['change']);
@@ -13,7 +15,7 @@ const showControls = computed(
   () => hasSessions.value && props.meta.totalPages > 1,
 );
 const sessionLabel = computed(() =>
-  props.meta?.total === 1 ? 'session' : 'sessions',
+  props.meta?.total === 1 ? props.noun : `${props.noun}s`,
 );
 
 function goTo(page) {
@@ -25,7 +27,7 @@ function goTo(page) {
   <nav
     v-if="hasSessions"
     class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-4"
-    aria-label="Class sessions pages"
+    :aria-label="label"
   >
     <div class="ot-meta" aria-live="polite">
       <span>Page {{ meta.page }} of {{ meta.totalPages }}</span>

@@ -69,6 +69,18 @@ export function formatDate(
   }
 }
 
+export function formatTime(
+  iso,
+  { timeZone = DEFAULT_TIME_ZONE, locale = DEFAULT_LOCALE } = {},
+) {
+  try {
+    const date = parseIso(iso);
+    return date ? clock(date, timeZone, locale) : DASH;
+  } catch {
+    return DASH;
+  }
+}
+
 export function formatSessionWindow(
   startsAt,
   endsAt,

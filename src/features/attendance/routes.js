@@ -37,8 +37,7 @@ export default [
   {
     path: 'lecturer/class-sessions/:classSessionId',
     name: 'lecturer-class-session-records',
-    component: page,
-    props: { title: 'Class session attendance roster' },
+    component: () => import('./pages/LecturerClassSessionRecordsPage.vue'),
     meta: { roles: ['teacher'] },
   },
 ];
