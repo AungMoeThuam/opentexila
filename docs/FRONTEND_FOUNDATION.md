@@ -20,11 +20,11 @@ To integrate with the backend, set the flag to `false` and restart Vite. A backe
 
 ## Ownership and routes
 
-| Owner / feature               | Route file                          | Initial page slots                                                                                                                |
-| ----------------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| Aung Moe Thu / authentication | `src/features/auth/routes.js`       | `/login`, `/change-password`, `/admin/users`                                                                                      |
-| Kar You Chia / enrolments     | `src/features/enrolments/routes.js` | `/my-classes`, `/enrolments`, `/enrolments/:classId`                                                                              |
-| Show Wai Yan / attendance     | `src/features/attendance/routes.js` | `/attendance`, `/attendance/meetings/:meetingId`, `/attendance/history`, `/attendance/classes`, `/attendance/sessions/:sessionId` |
+| Owner / feature               | Route file                          | Initial page slots                                                                                                                                                 |
+| ----------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Aung Moe Thu / authentication | `src/features/auth/routes.js`       | `/login`, `/change-password`, `/admin/users`                                                                                                                       |
+| Kar You Chia / enrolments     | `src/features/enrolments/routes.js` | `/my-classes`, `/enrolments`, `/enrolments/:classId`                                                                                                               |
+| Show Wai Yan / attendance     | `src/features/attendance/routes.js` | `/attendance`, `/attendance/meetings/:meetingId`, `/attendance/history`, `/attendance/classes`, `/lecturer/attendance`, `/lecturer/class-sessions/:classSessionId` |
 
 These follow the proposed team division; coordinate if assignments change. Each member owns their pages and related backend APIs. Aung coordinates shared changes. Student self-enrolment remains undecided; there is no Browse/Enrol action in this foundation. Lecturer access to enrolment pages is for reading rosters; API permissions must restrict writes to authorized users.
 
