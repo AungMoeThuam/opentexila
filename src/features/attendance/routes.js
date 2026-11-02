@@ -3,18 +3,29 @@ const AttendanceHistoryPage = () => import('./pages/AttendanceHistoryPage.vue');
 
 export default [
   {
+    path: 'student/attendance',
+    name: 'student-attendance',
+    component: () => import('./pages/StudentAttendancePage.vue'),
+    meta: { roles: ['student'] },
+  },
+  {
+    path: 'student/attendance/class-sessions/:classSessionId',
+    name: 'student-class-session-check-in',
+    component: () => import('./pages/ClassSessionPage.vue'),
+    meta: { roles: ['student'] },
+  },
+  {
     path: 'attendance',
     name: 'today-classes',
-    component: page,
-    props: { title: "Today's classes" },
-    meta: { roles: ['student'] },
+    redirect: { name: 'student-attendance' },
   },
   {
     path: 'attendance/meetings/:meetingId',
     name: 'check-in',
-    component: page,
-    props: { title: 'Class check-in' },
-    meta: { roles: ['student'] },
+    redirect: (to) => ({
+      name: 'student-class-session-check-in',
+      params: { classSessionId: to.params.meetingId },
+    }),
   },
   {
     path: 'attendance/history',

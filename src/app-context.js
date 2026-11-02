@@ -2,8 +2,12 @@ import { createApiClient } from './shared/services/api-client';
 import { createSessionAdapter } from './features/auth/services/session-adapter';
 import { createAuth } from './features/auth/store/create-auth';
 
+export const devAuthMode =
+  import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEV_AUTH === 'true';
 export const mockMode =
-  import.meta.env.DEV && import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true';
+  !devAuthMode &&
+  import.meta.env.DEV &&
+  import.meta.env.VITE_ENABLE_MOCK_AUTH === 'true';
 let authInstance;
 export const api = createApiClient({
   baseUrl: import.meta.env.VITE_API_BASE_URL || '/api/v1',
@@ -17,8 +21,15 @@ if (mockMode) {
 }
 export const auth = (authInstance = createAuth(adapter));
 export async function selectDemoRole(role) {
-  if (!mockMode) throw new Error('Mock authentication is development-only.');
-  adapter.selectRole(role);
+  if (devAuthMode) {
+    if (role === 'guest') await adapter.logout();
+    else
+      await api.request('/dev/auth/select-role', {
+        method: 'POST',
+        body: { role },
+      });
+  } else if (mockMode) adapter.selectRole(role);
+  else throw new Error('Role selection is development-only.');
   api.resetCsrf();
   await auth.restore({ force: true });
 }

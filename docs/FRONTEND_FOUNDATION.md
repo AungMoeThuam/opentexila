@@ -102,3 +102,7 @@ Use `/dev/example` to exercise list loading, empty, retryable error, inline vali
 - Update this guide and style-guide examples if you change a shared pattern.
 
 The Node tests cover HTTP/CSRF behaviour, error normalization, session state, guard decisions and mock fixtures without a backend. Feature APIs and end-to-end authentication still require integration tests once implemented.
+
+## Development sign-in with real APIs
+
+Set `DEV_AUTH_ENABLED=true` and `FRONTEND_MOCK_AUTH=false` in the backend `.env`, then rerun `npm run stack:up`. The toolbar selects seeded database accounts and allows real feature API calls. On the host, use `VITE_ENABLE_DEV_AUTH=true` in frontend `.env.local` and enable the backend adapter separately. Production builds omit this mode. See backend `docs/DEVELOPMENT_AUTH.md` for seeding, session behavior and geolocation testing. Offline mock mode remains available separately.

@@ -12,7 +12,7 @@ const navigation = [
     icon: 'check',
     roles: ['student'],
     children: [
-      { label: "Today's classes", to: '/attendance' },
+      { label: 'Scheduled classes', to: '/student/attendance' },
       { label: 'My history', to: '/attendance/history' },
     ],
   },
