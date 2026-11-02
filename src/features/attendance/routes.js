@@ -1,4 +1,6 @@
 const page = () => import('../../shared/pages/FeaturePlaceholder.vue');
+const AttendanceHistoryPage = () => import('./pages/AttendanceHistoryPage.vue');
+
 export default [
   {
     path: 'attendance',
@@ -17,8 +19,13 @@ export default [
   {
     path: 'attendance/history',
     name: 'attendance-history',
-    component: page,
-    props: { title: 'My attendance history' },
+    component: AttendanceHistoryPage,
+    meta: { roles: ['student'] },
+  },
+  {
+    path: 'student/attendance/history',
+    name: 'student-attendance-history',
+    component: AttendanceHistoryPage,
     meta: { roles: ['student'] },
   },
   {
