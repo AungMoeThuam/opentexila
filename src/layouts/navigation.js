@@ -17,10 +17,16 @@ const navigation = [
     ],
   },
   {
+    label: 'Attendance',
+    icon: 'check',
+    to: '/lecturer/attendance',
+    roles: ['teacher'],
+  },
+  {
     label: 'Class attendance',
     icon: 'check',
     to: '/attendance/classes',
-    roles: ['teacher', 'admin'],
+    roles: ['admin'],
   },
   {
     label: 'Account invitations',

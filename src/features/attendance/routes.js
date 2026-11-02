@@ -1,4 +1,6 @@
 const page = () => import('../../shared/pages/FeaturePlaceholder.vue');
+const AttendanceHistoryPage = () => import('./pages/AttendanceHistoryPage.vue');
+
 export default [
   {
     path: 'student/attendance',
@@ -28,8 +30,13 @@ export default [
   {
     path: 'attendance/history',
     name: 'attendance-history',
-    component: page,
-    props: { title: 'My attendance history' },
+    component: AttendanceHistoryPage,
+    meta: { roles: ['student'] },
+  },
+  {
+    path: 'student/attendance/history',
+    name: 'student-attendance-history',
+    component: AttendanceHistoryPage,
     meta: { roles: ['student'] },
   },
   {
@@ -37,13 +44,18 @@ export default [
     name: 'class-attendance',
     component: page,
     props: { title: 'Class attendance' },
-    meta: { roles: ['teacher', 'admin'] },
+    meta: { roles: ['admin'] },
   },
   {
-    path: 'attendance/sessions/:sessionId',
-    name: 'attendance-roster',
-    component: page,
-    props: { title: 'Meeting attendance roster' },
-    meta: { roles: ['teacher', 'admin'] },
+    path: 'lecturer/attendance',
+    name: 'lecturer-attendance',
+    component: () => import('./pages/LecturerAttendancePage.vue'),
+    meta: { roles: ['teacher'] },
+  },
+  {
+    path: 'lecturer/class-sessions/:classSessionId',
+    name: 'lecturer-class-session-records',
+    component: () => import('./pages/LecturerClassSessionRecordsPage.vue'),
+    meta: { roles: ['teacher'] },
   },
 ];
