@@ -23,11 +23,24 @@ const filters = reactive({
   includeCancelled: false,
 });
 
-const availableClasses = ref([
-  { id: 1, label: 'COS30043 - Interface Design and Development (Sec A)' },
-  { id: 2, label: 'SWE30009 - Software Engineering Project A (Sec B)' },
-  { id: 3, label: 'COS10009 - Introduction to Programming (Sec A)' },
-]);
+const knownClasses = reactive(new Map());
+const availableClasses = computed(() =>
+  [...knownClasses.values()].sort((a, b) => a.label.localeCompare(b.label)),
+);
+
+function rememberClasses(items) {
+  for (const item of items) {
+    const cls = item?.class;
+    if (!cls?.id) continue;
+    const code = cls.course?.code ?? '';
+    const name = cls.course?.name ?? '';
+    const section = cls.section ? ` (Sec ${cls.section})` : '';
+    knownClasses.set(cls.id, {
+      id: cls.id,
+      label: `${code} - ${name}${section}`,
+    });
+  }
+}
 
 let abortController = null;
 
@@ -147,6 +160,7 @@ async function loadAttendance(page = 1) {
     });
 
     records.value = response.data || [];
+    rememberClasses(records.value);
     meta.value = response.meta || {
       page: 1,
       limit: 20,
