@@ -21,4 +21,10 @@ export default [
     props: { title: 'Class roster' },
     meta: { roles: ['admin', 'teacher'] },
   },
+  {
+    path: 'lecturer/classes/:classId/students',
+    name: 'lecturer-class-students',
+    component: () => import('./pages/LecturerClassStudentsPage.vue'),
+    meta: { roles: ['teacher'] },
+  },
 ];
