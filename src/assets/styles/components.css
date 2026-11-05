@@ -347,3 +347,9 @@
     transition: none;
   }
 }
+
+/* Horizontal scroll only. overflow-x: auto makes overflow-y compute to auto,
+   so a 1px rounding overflow showed a stray vertical scrollbar. */
+.table-responsive {
+  overflow-y: hidden;
+}
