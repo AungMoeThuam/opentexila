@@ -49,13 +49,16 @@ onMounted(load);
 </script>
 
 <template>
+  <RouterLink class="d-inline-block mb-4" :to="{ name: 'lecturer-classes' }"
+    >← My classes</RouterLink
+  >
   <div v-if="notFound" class="ot-card ot-empty">
     <h1 class="ot-section-title">Class not found</h1>
     <p class="ot-meta">
       This class does not exist, or it is not assigned to you.
     </p>
-    <router-link class="btn btn-outline-primary" to="/lecturer/attendance">
-      Back to attendance
+    <router-link class="btn btn-outline-primary" to="/lecturer/classes">
+      Back to my classes
     </router-link>
   </div>
 

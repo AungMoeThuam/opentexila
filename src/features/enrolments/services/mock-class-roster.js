@@ -3,7 +3,7 @@ import { ApiError } from '../../../shared/services/api-client.js';
 const LECTURER = { id: 2, name: 'Lecturer Demo' };
 const TERM = '2026-S2';
 
-const CLASSES = {
+export const CLASSES = {
   1: {
     id: 1,
     course: {
