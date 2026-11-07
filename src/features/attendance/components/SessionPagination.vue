@@ -15,7 +15,9 @@ const showControls = computed(
   () => hasSessions.value && props.meta.totalPages > 1,
 );
 const sessionLabel = computed(() =>
-  props.meta?.total === 1 ? props.noun : `${props.noun}s`,
+  props.meta?.total === 1
+    ? props.noun
+    : `${props.noun}${props.noun.endsWith('s') ? 'es' : 's'}`,
 );
 
 function goTo(page) {

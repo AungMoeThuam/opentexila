@@ -1,6 +1,12 @@
 const page = () => import('../../shared/pages/FeaturePlaceholder.vue');
 export default [
   {
+    path: 'lecturer/classes',
+    name: 'lecturer-classes',
+    component: () => import('./pages/LecturerClassesPage.vue'),
+    meta: { roles: ['teacher'] },
+  },
+  {
     path: 'my-classes',
     name: 'my-classes',
     component: page,
