@@ -1,7 +1,7 @@
 # Glossary
 
 **Lecturer**:
-A person who teaches a class. The backend role is `teacher`; the interface and URLs say "Lecturer".
+A person who teaches a class. The backend role is `lecturer`; the interface and URLs say "Lecturer".
 
 **Class**:
 A course taught in one section during one term, by one lecturer, in one room.

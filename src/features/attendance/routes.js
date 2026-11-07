@@ -50,12 +50,12 @@ export default [
     path: 'lecturer/attendance',
     name: 'lecturer-attendance',
     component: () => import('./pages/LecturerAttendancePage.vue'),
-    meta: { roles: ['teacher'] },
+    meta: { roles: ['lecturer'] },
   },
   {
     path: 'lecturer/class-sessions/:classSessionId',
     name: 'lecturer-class-session-records',
     component: () => import('./pages/LecturerClassSessionRecordsPage.vue'),
-    meta: { roles: ['teacher'] },
+    meta: { roles: ['lecturer'] },
   },
 ];

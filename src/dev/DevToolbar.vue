@@ -45,7 +45,7 @@ async function changeRole(event) {
     >
       <option value="guest">Signed out</option>
       <option value="student">Student</option>
-      <option value="teacher">Lecturer</option>
+      <option value="lecturer">Lecturer</option>
       <option value="admin">Admin</option>
     </select>
     <span v-if="error" role="alert">{{ error }}</span>

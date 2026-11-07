@@ -60,8 +60,8 @@ test('Attendance history appears in student navigation', () => {
   );
 });
 
-test('Student attendance menu is hidden from teacher and admin', () => {
-  for (const role of ['teacher', 'admin']) {
+test('Student attendance menu is hidden from lecturer and admin', () => {
+  for (const role of ['lecturer', 'admin']) {
     const navigation = navigationForRole(role);
 
     const attendanceGroup = navigation.find((item) =>

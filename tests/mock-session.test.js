@@ -13,8 +13,8 @@ test('mock identity uses only known fixture roles and remains usable without sto
   assert.equal((await mock.currentUser()).role, 'admin');
   mock.selectRole('unrecognised');
   assert.equal(await mock.currentUser(), null);
-  mock.selectRole('teacher');
-  assert.equal((await mock.currentUser()).role, 'teacher');
+  mock.selectRole('lecturer');
+  assert.equal((await mock.currentUser()).role, 'lecturer');
   await mock.logout();
   assert.equal(await mock.currentUser(), null);
 });

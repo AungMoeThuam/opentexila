@@ -7,11 +7,11 @@ const users = {
     role: 'student',
     status: 'active',
   },
-  teacher: {
+  lecturer: {
     id: 9002,
     name: 'Lecturer Demo',
     email: 'lecturer@example.test',
-    role: 'teacher',
+    role: 'lecturer',
     status: 'active',
   },
   admin: {

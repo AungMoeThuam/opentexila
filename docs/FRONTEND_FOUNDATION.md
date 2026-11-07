@@ -49,7 +49,7 @@ await router.replace(
 // AppLayout already provides sign-out using auth.logout().
 ```
 
-Import `computed` from Vue and use Vue Router's `useRoute`/`useRouter` in your page. `auth.state.status` is `unknown`, `loading`, `authenticated`, `guest` or `error`. `auth.restore()` deduplicates session requests; `restore({ force: true })` retries. Only `id`, `name`, `email`, `role`, `status` are retained. The backend role is `teacher`; show “Lecturer” in the UI.
+Import `computed` from Vue and use Vue Router's `useRoute`/`useRouter` in your page. `auth.state.status` is `unknown`, `loading`, `authenticated`, `guest` or `error`. `auth.restore()` deduplicates session requests; `restore({ force: true })` retries. Only `id`, `name`, `email`, `role`, `status` are retained. The backend role is `lecturer`; show “Lecturer” in the UI.
 
 ## Shared API client
 

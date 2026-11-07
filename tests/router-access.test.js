@@ -39,7 +39,7 @@ test('guards distinguish guest, forbidden and unavailable; menus follow roles', 
     navigationForRole('student').some((item) => item.to === '/my-classes'),
   );
   assert.ok(
-    !navigationForRole('teacher').some(
+    !navigationForRole('lecturer').some(
       (item) => item.to === '/admin/invitations',
     ),
   );
@@ -59,15 +59,15 @@ test('guards distinguish guest, forbidden and unavailable; menus follow roles', 
 test('assigned classes navigation and route are lecturer-only', () => {
   assert.deepEqual(
     routes.find((r) => r.name === 'lecturer-classes').meta.roles,
-    ['teacher'],
+    ['lecturer'],
   );
-  for (const role of ['student', 'admin', 'teacher']) {
+  for (const role of ['student', 'admin', 'lecturer']) {
     const links = navigationForRole(role);
     assert.equal(
       links.some((l) => l.to === '/lecturer/classes'),
-      role === 'teacher',
+      role === 'lecturer',
     );
-    if (role === 'teacher')
+    if (role === 'lecturer')
       assert.equal(
         links.some((l) => l.to === '/enrolments'),
         false,

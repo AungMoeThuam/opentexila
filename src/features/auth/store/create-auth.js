@@ -8,7 +8,7 @@ function safeUser(user) {
     user.id < 1 ||
     typeof user.name !== 'string' ||
     typeof user.email !== 'string' ||
-    !['student', 'teacher', 'admin'].includes(user.role) ||
+    !['student', 'lecturer', 'admin'].includes(user.role) ||
     user.status !== 'active'
   ) {
     throw new Error('The server returned an invalid user profile.');

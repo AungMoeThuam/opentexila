@@ -4,7 +4,7 @@ const navigation = [
     label: 'My classes',
     icon: 'book',
     to: '/lecturer/classes',
-    roles: ['teacher'],
+    roles: ['lecturer'],
   },
   { label: 'My classes', icon: 'book', to: '/my-classes', roles: ['student'] },
   {
@@ -26,7 +26,7 @@ const navigation = [
     label: 'Attendance',
     icon: 'check',
     to: '/lecturer/attendance',
-    roles: ['teacher'],
+    roles: ['lecturer'],
   },
   {
     label: 'Class attendance',

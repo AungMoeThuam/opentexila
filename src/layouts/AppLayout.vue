@@ -103,7 +103,7 @@ onBeforeUnmount(() => breakpoint?.removeEventListener('change', onBreakpoint));
           <span class="d-none d-sm-block">
             <span class="ot-user__name">{{ auth.state.user?.name }}</span>
             <span class="ot-user__role">{{
-              auth.state.user?.role === 'teacher'
+              auth.state.user?.role === 'lecturer'
                 ? 'Lecturer'
                 : auth.state.user?.role
             }}</span>

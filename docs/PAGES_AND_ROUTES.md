@@ -7,7 +7,7 @@ The initial scope is authentication, enrolments and attendance. The wider catalo
 ## Conventions
 
 - Student pages use `/student`, lecturer pages use `/lecturer`, and administrator pages use `/admin`.
-- The backend role remains `teacher`; its frontend label is Lecturer and its URL prefix is `/lecturer`.
+- The backend role remains `lecturer`; its frontend label is Lecturer and its URL prefix is `/lecturer`.
 - Use lowercase, plural, kebab-case resource paths: `classes`, `class-sessions` and `enrolments`.
 - Browser routes keep role prefixes. Backend resource APIs use `/api/v1` without role prefixes; the server authorises and scopes each request.
 - Use camelCase path/query parameter names (`classId`); database columns and JSON foreign-key fields use snake_case (`class_id`).
@@ -28,7 +28,7 @@ The initial scope is authentication, enrolments and attendance. The wider catalo
 
 Backend foreign keys are `class_id` and `class_session_id`. `enrolments` uses composite primary key `(class_id, student_id)` and `attendance_records` uses composite primary key `(class_session_id, student_id)`. Frontend code should map agreed API response fields explicitly. Authentication session identifiers (`auth_sessions`) are unrelated and must not be used as resource IDs. Route paths in this catalogue remain proposals; the database refactor does not change Vue routes.
 
-Class-session times and cancellation are authoritative. Account role is `student`/`teacher`/`admin`; account status is `active`/`inactive`; class session state is `scheduled`/`cancelled`; attendance status is `pending`/`present`/`late`/`absent`. All four database columns are ENUMs. UI availability such as upcoming/in-progress/ended is derived; it is not another stored class state.
+Class-session times and cancellation are authoritative. Account role is `student`/`lecturer`/`admin`; account status is `active`/`inactive`; class session state is `scheduled`/`cancelled`; attendance status is `pending`/`present`/`late`/`absent`. All four database columns are ENUMs. UI availability such as upcoming/in-progress/ended is derived; it is not another stored class state.
 
 ## Backend route conventions and first-milestone mapping
 
@@ -87,7 +87,7 @@ The check-in page uses `classSessionId`. Check-in becomes available at the sched
 
 ## Lecturer pages
 
-All routes require the stored `teacher` role. Lecturers only access classes assigned to them.
+All routes require the stored `lecturer` role. Lecturers only access classes assigned to them.
 
 | Route                                                       | Page and purpose                                              | Priority                 |
 | ----------------------------------------------------------- | ------------------------------------------------------------- | ------------------------ |

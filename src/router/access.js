@@ -1,7 +1,7 @@
 export function homeForRole(role) {
   return role === 'student'
     ? '/my-classes'
-    : role === 'teacher'
+    : role === 'lecturer'
       ? '/lecturer/attendance'
       : '/enrolments';
 }

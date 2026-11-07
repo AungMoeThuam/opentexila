@@ -10,7 +10,7 @@ export default [
     path: 'lecturer/classes',
     name: 'lecturer-classes',
     component: () => import('./pages/LecturerClassesPage.vue'),
-    meta: { roles: ['teacher'] },
+    meta: { roles: ['lecturer'] },
   },
   {
     path: 'my-classes',
@@ -23,19 +23,19 @@ export default [
     name: 'enrolments',
     component: page,
     props: { title: 'Class enrolments' },
-    meta: { roles: ['admin', 'teacher'] },
+    meta: { roles: ['admin', 'lecturer'] },
   },
   {
     path: 'enrolments/:classId',
     name: 'class-roster',
     component: page,
     props: { title: 'Class roster' },
-    meta: { roles: ['admin', 'teacher'] },
+    meta: { roles: ['admin', 'lecturer'] },
   },
   {
     path: 'lecturer/classes/:classId/students',
     name: 'lecturer-class-students',
     component: () => import('./pages/LecturerClassStudentsPage.vue'),
-    meta: { roles: ['teacher'] },
+    meta: { roles: ['lecturer'] },
   },
 ];
