@@ -1,6 +1,12 @@
 const page = () => import('../../shared/pages/FeaturePlaceholder.vue');
+const StudentClassesPage = () => import('./pages/StudentClassesPage.vue');
+
 export default [
   {
+    path: 'student/classes',
+    name: 'student-classes',
+    component: StudentClassesPage,
+    meta: { roles: ['student'] },
     path: 'lecturer/classes',
     name: 'lecturer-classes',
     component: () => import('./pages/LecturerClassesPage.vue'),
@@ -9,8 +15,7 @@ export default [
   {
     path: 'my-classes',
     name: 'my-classes',
-    component: page,
-    props: { title: 'My classes' },
+    component: StudentClassesPage,
     meta: { roles: ['student'] },
   },
   {
