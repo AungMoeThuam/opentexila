@@ -64,8 +64,12 @@ test('Student attendance menu is hidden from teacher and admin', () => {
   for (const role of ['teacher', 'admin']) {
     const navigation = navigationForRole(role);
 
-    const attendanceGroup = navigation.find(
-      (item) => item.label === 'Attendance',
+    const attendanceGroup = navigation.find((item) =>
+      item.children?.some(
+        (child) =>
+          child.to === '/student/attendance' ||
+          child.to === '/attendance/history',
+      ),
     );
 
     assert.equal(

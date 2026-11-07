@@ -1,11 +1,17 @@
 // UI visibility only. Backend endpoints enforce permissions independently.
 const navigation = [
+  {
+    label: 'My classes',
+    icon: 'book',
+    to: '/lecturer/classes',
+    roles: ['teacher'],
+  },
   { label: 'My classes', icon: 'book', to: '/my-classes', roles: ['student'] },
   {
     label: 'Enrolments',
     icon: 'users',
     to: '/enrolments',
-    roles: ['admin', 'teacher'],
+    roles: ['admin'],
   },
   {
     label: 'Attendance',

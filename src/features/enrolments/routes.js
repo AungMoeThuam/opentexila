@@ -7,6 +7,10 @@ export default [
     name: 'student-classes',
     component: StudentClassesPage,
     meta: { roles: ['student'] },
+    path: 'lecturer/classes',
+    name: 'lecturer-classes',
+    component: () => import('./pages/LecturerClassesPage.vue'),
+    meta: { roles: ['teacher'] },
   },
   {
     path: 'my-classes',

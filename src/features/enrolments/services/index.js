@@ -8,3 +8,8 @@ export const classRosterService = mockMode
   : createClassRosterService({ api });
 
 export const studentClassesService = createStudentClassesService({ api });
+import { createMyClassesService } from './my-classes-service.js';
+import { createMockMyClassesService } from './mock-my-classes.js';
+export const myClassesService = mockMode
+  ? createMockMyClassesService()
+  : createMyClassesService({ api });
