@@ -52,20 +52,19 @@ test('upcoming and cancelled sessions have no rows but still return context', as
   }
 });
 
-test('ended session has present, late and absent but never pending', async () => {
-  const { data } = await service.listClassSessionRecords(ENDED_ID, {
-    limit: 100,
-  });
-  assert.equal(data.length, 24);
-  assert.deepEqual(statusSet(data), ['absent', 'late', 'present']);
-});
-
-test('in-progress session has present, late and pending but never absent', async () => {
-  const { data } = await service.listClassSessionRecords(IN_PROGRESS_ID, {
-    limit: 100,
-  });
-  assert.equal(data.length, 24);
-  assert.deepEqual(statusSet(data), ['late', 'pending', 'present']);
+test('mock roster statuses match the session state', async (t) => {
+  for (const [name, id, expected] of [
+    ['ended', ENDED_ID, ['absent', 'late', 'present']],
+    ['in progress', IN_PROGRESS_ID, ['late', 'pending', 'present']],
+  ]) {
+    await t.test(name, async () => {
+      const { data } = await service.listClassSessionRecords(id, {
+        limit: 100,
+      });
+      assert.equal(data.length, 24);
+      assert.deepEqual(statusSet(data), expected);
+    });
+  }
 });
 
 test('status filter returns only matching rows and counts them in meta', async () => {
