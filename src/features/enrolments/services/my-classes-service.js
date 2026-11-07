@@ -1,4 +1,4 @@
-import { ApiError } from '../../../shared/services/api-client.js';
+import { createClassListRequest } from './class-list-request.js';
 
 export function buildMyClassesPath({
   page = 1,
@@ -26,17 +26,6 @@ export function buildMyClassesPath({
 }
 export function createMyClassesService({ api }) {
   return {
-    async list(params, { signal } = {}) {
-      const result = await api.request(buildMyClassesPath(params), { signal });
-      if (
-        !Array.isArray(result?.data) ||
-        !result?.meta ||
-        !Number.isInteger(result.meta.totalPages)
-      )
-        throw new ApiError('The server returned an unexpected class list.', {
-          code: 'INVALID_RESPONSE',
-        });
-      return result;
-    },
+    list: createClassListRequest({ api, buildPath: buildMyClassesPath }),
   };
 }
