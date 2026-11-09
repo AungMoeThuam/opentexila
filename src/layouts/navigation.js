@@ -7,6 +7,8 @@ const navigation = [
     roles: ['lecturer'],
   },
   { label: 'My classes', icon: 'book', to: '/my-classes', roles: ['student'] },
+  { label: 'Courses', icon: 'book', to: '/admin/courses', roles: ['admin'] },
+  { label: 'Classes', icon: 'folder', to: '/admin/classes', roles: ['admin'] },
   {
     label: 'Enrolments',
     icon: 'users',
