@@ -3,7 +3,7 @@ export function homeForRole(role) {
     ? '/my-classes'
     : role === 'lecturer'
       ? '/lecturer/attendance'
-      : '/enrolments';
+      : '/admin/enrolments';
 }
 
 export function safeRedirect(value, fallback = '/') {
