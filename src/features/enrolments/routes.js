@@ -7,6 +7,8 @@ export default [
     name: 'student-classes',
     component: StudentClassesPage,
     meta: { roles: ['student'] },
+  },
+  {
     path: 'lecturer/classes',
     name: 'lecturer-classes',
     component: () => import('./pages/LecturerClassesPage.vue'),
@@ -17,6 +19,18 @@ export default [
     name: 'my-classes',
     component: StudentClassesPage,
     meta: { roles: ['student'] },
+  },
+  {
+    path: 'admin/enrolments',
+    name: 'admin-enrolments',
+    component: () => import('./pages/AdminClassListPage.vue'),
+    meta: { roles: ['admin'] },
+  },
+  {
+    path: 'admin/enrolments/:classId',
+    name: 'admin-class-enrolments',
+    component: () => import('./pages/AdminClassEnrolmentsPage.vue'),
+    meta: { roles: ['admin'] },
   },
   {
     path: 'enrolments',

@@ -10,7 +10,7 @@ const navigation = [
   {
     label: 'Enrolments',
     icon: 'users',
-    to: '/enrolments',
+    to: '/admin/enrolments',
     roles: ['admin'],
   },
   {
