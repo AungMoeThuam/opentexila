@@ -5,6 +5,7 @@ import AppLayout from '../layouts/AppLayout.vue';
 import { publicAuthRoutes, protectedAuthRoutes } from '../features/auth/routes';
 import enrolmentRoutes from '../features/enrolments/routes';
 import attendanceRoutes from '../features/attendance/routes';
+import courseRoutes from '../features/courses/routes';
 import { auth } from '../app-context';
 import { createAccessGuard } from './access';
 
@@ -45,6 +46,7 @@ const router = createRouter({
         ...protectedAuthRoutes,
         ...enrolmentRoutes,
         ...attendanceRoutes,
+        ...courseRoutes,
         {
           path: 'forbidden',
           name: 'forbidden',
