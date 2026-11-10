@@ -307,3 +307,53 @@ test('rejects moving an unknown session', () => {
   assert.equal(result.success, false)
   assert.equal(timetable.isDirty.value, false)
 })
+
+// 19. Move with a custom end time
+test('allows changing the end time in a move operation', () => {
+  const timetable = createTimetable()
+
+  const result = timetable.moveSession(
+    1,
+    NEW_START,
+    '2026-11-17T05:00:00.000Z',
+  )
+
+  assert.equal(result.success, true)
+
+  assert.equal(
+    timetable.sessions.value[0].starts_at,
+    NEW_START,
+  )
+
+  assert.equal(
+    timetable.sessions.value[0].ends_at,
+    '2026-11-17T05:00:00.000Z',
+  )
+
+  assert.equal(
+    timetable.sessions.value[0].late_after,
+    '2026-11-17T02:10:00.000Z',
+  )
+
+  assert.equal(timetable.undo(), true)
+
+  assert.equal(
+    timetable.sessions.value[0].ends_at,
+    '2026-11-16T03:00:00.000Z',
+  )
+})
+
+// 20. Reject an invalid custom end time
+test('rejects an invalid custom end time', () => {
+  const timetable = createTimetable()
+
+  const result = timetable.moveSession(
+    1,
+    NEW_START,
+    '2026-11-17T01:00:00.000Z',
+  )
+
+  assert.equal(result.success, false)
+  assert.equal(timetable.isDirty.value, false)
+  assert.equal(timetable.canUndo.value, false)
+})

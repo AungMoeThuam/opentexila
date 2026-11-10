@@ -1,3 +1,4 @@
+
 import { computed, shallowRef } from 'vue'
 
 import {
@@ -91,7 +92,11 @@ export function useTimetable(
     redoStack.value = []
   }
 
-  function moveSession(sessionId, newStartTime) {
+  function moveSession(
+    sessionId,
+    newStartTime,
+    newEndTime = null,
+  ) {
     const session = draftSessions.value.find(
       (item) => item.id === sessionId,
     )
@@ -132,11 +137,17 @@ export function useTimetable(
       }
     }
 
-    // Preserve the original duration and late threshold.
+    // Preserve duration and late threshold offset.
     const duration = oldEnd - oldStart
     const lateOffset = oldLate - oldStart
 
-    const newEnd = newStart + duration
+    // Drag-and-drop preserves the session duration.
+    // The Move dialog can provide a custom end time.
+    const newEnd =
+      newEndTime === null
+        ? newStart + duration
+        : Date.parse(newEndTime)
+
     const newLate = newStart + lateOffset
 
     if (

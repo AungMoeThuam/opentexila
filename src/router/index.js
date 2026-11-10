@@ -7,6 +7,7 @@ import enrolmentRoutes from '../features/enrolments/routes';
 import attendanceRoutes from '../features/attendance/routes';
 import courseRoutes from '../features/courses/routes';
 import dashboardRoutes from '../features/dashboard/routes';
+import schedulingRoutes from '../features/scheduling/routes';
 import { auth } from '../app-context';
 import { createAccessGuard, homeForRole } from './access';
 
@@ -55,6 +56,7 @@ const router = createRouter({
         ...enrolmentRoutes,
         ...attendanceRoutes,
         ...courseRoutes,
+        ...schedulingRoutes,
         {
           path: 'forbidden',
           name: 'forbidden',
