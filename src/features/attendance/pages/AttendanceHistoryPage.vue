@@ -239,7 +239,7 @@ onBeforeUnmount(() => {
           class="row g-3 align-items-end"
         >
           <!-- Class Filter -->
-          <div class="col-12 col-md-4 col-lg-3 class-filter">
+          <div class="col-12 col-md-4 col-lg-3">
             <label
               for="filter-class"
               class="form-label fw-semibold small text-muted"
@@ -275,26 +275,6 @@ onBeforeUnmount(() => {
             >
               Loading classes
             </span>
-            <div
-              v-if="classOptionsError"
-              class="ot-notice ot-notice--error class-filter-note d-flex align-items-center gap-2 mt-1 py-1 px-2 small"
-              role="alert"
-            >
-              <span>Unable to load classes.</span>
-              <button
-                type="button"
-                class="btn btn-link btn-sm p-0"
-                @click="retryClassOptions"
-              >
-                Retry
-              </button>
-            </div>
-            <div
-              v-else-if="!classOptionsLoading && availableClasses.length === 0"
-              class="form-text"
-            >
-              No classes found.
-            </div>
           </div>
 
           <!-- Date From -->
@@ -354,7 +334,7 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- Include Cancelled Checkbox -->
-          <div class="col-6 col-md-4 col-lg-2">
+          <div class="col-6 col-md-4 col-lg-auto">
             <div class="form-check mb-1">
               <input
                 id="filter-cancelled"
@@ -372,11 +352,37 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <!-- Reset Button -->
-          <div class="col-12 col-md-auto ms-md-auto d-flex justify-content-end">
+          <!-- Footer: lookup status on the left, reset on the right -->
+          <div
+            class="col-12 d-flex flex-wrap align-items-center justify-content-between gap-2"
+          >
+            <div class="small">
+              <div
+                v-if="classOptionsError"
+                class="ot-notice ot-notice--error d-inline-flex align-items-center gap-2 py-1 px-2"
+                role="alert"
+              >
+                <span>Unable to load classes.</span>
+                <button
+                  type="button"
+                  class="btn btn-link btn-sm p-0"
+                  @click="retryClassOptions"
+                >
+                  Retry
+                </button>
+              </div>
+              <span
+                v-else-if="
+                  !classOptionsLoading && availableClasses.length === 0
+                "
+                class="text-muted"
+              >
+                No classes found.
+              </span>
+            </div>
             <button
               type="button"
-              class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center"
+              class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center ms-auto"
               :disabled="!hasActiveFilters"
               @click="resetFilters"
             >
@@ -582,22 +588,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* Keep the lookup message out of the row's flow on wide screens so the
-   class select stays aligned with the other filters. */
-@media (min-width: 768px) {
-  .class-filter {
-    position: relative;
-  }
-
-  .class-filter-note,
-  .class-filter :deep(.form-text) {
-    position: absolute;
-    top: 100%;
-    left: calc(var(--bs-gutter-x) * 0.5);
-    right: calc(var(--bs-gutter-x) * 0.5);
-  }
-}
-
 .table-hover tbody tr:hover {
   background-color: rgba(0, 0, 0, 0.02);
 }
