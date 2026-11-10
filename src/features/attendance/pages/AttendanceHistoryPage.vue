@@ -239,7 +239,7 @@ onBeforeUnmount(() => {
           class="row g-3 align-items-end"
         >
           <!-- Class Filter -->
-          <div class="col-12 col-md-4 col-lg-3">
+          <div class="col-12 col-md-4 col-lg-3 class-filter">
             <label
               for="filter-class"
               class="form-label fw-semibold small text-muted"
@@ -277,7 +277,7 @@ onBeforeUnmount(() => {
             </span>
             <div
               v-if="classOptionsError"
-              class="ot-notice ot-notice--error d-flex align-items-center gap-2 mt-1 py-1 px-2 small"
+              class="ot-notice ot-notice--error class-filter-note d-flex align-items-center gap-2 mt-1 py-1 px-2 small"
               role="alert"
             >
               <span>Unable to load classes.</span>
@@ -582,6 +582,22 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* Keep the lookup message out of the row's flow on wide screens so the
+   class select stays aligned with the other filters. */
+@media (min-width: 768px) {
+  .class-filter {
+    position: relative;
+  }
+
+  .class-filter-note,
+  .class-filter :deep(.form-text) {
+    position: absolute;
+    top: 100%;
+    left: calc(var(--bs-gutter-x) * 0.5);
+    right: calc(var(--bs-gutter-x) * 0.5);
+  }
+}
+
 .table-hover tbody tr:hover {
   background-color: rgba(0, 0, 0, 0.02);
 }
