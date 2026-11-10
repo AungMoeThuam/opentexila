@@ -1,11 +1,13 @@
 import { ref } from 'vue';
 
 const labelFor = (cls) => {
-  const code = cls.course?.code ?? '';
-  const name = cls.course?.name ?? '';
-  const term = cls.term ? `${cls.term}, ` : '';
-  const section = cls.section ? `Sec ${cls.section}` : '';
-  return `${code} - ${name} (${term}${section})`;
+  const course = [cls.course?.code, cls.course?.name]
+    .filter(Boolean)
+    .join(' - ');
+  const detail = [cls.term, cls.section ? `Sec ${cls.section}` : '']
+    .filter(Boolean)
+    .join(', ');
+  return detail ? `${course} (${detail})` : course;
 };
 
 export function useAttendanceClassOptions({ fetchPage, limit = 50 }) {

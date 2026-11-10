@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildAttendanceClassOptionsQuery } from '../src/features/attendance/services/attendance-query.js';
+import { useAttendanceClassOptions } from '../src/features/attendance/composables/use-attendance-class-options.js';
 
 test('class options query targets the lookup with paging only', () => {
   const url = new URL(
@@ -25,8 +26,6 @@ test('class options query without params has no query string', () => {
     '/me/attendance-records/classes',
   );
 });
-
-import { useAttendanceClassOptions } from '../src/features/attendance/composables/use-attendance-class-options.js';
 
 const cls = (id, code, section, term = '2026-S2') => ({
   id,
@@ -104,4 +103,24 @@ test('a failure on a later page discards partial options', async () => {
 
   assert.equal(options.error.value.message, 'page 2 failed');
   assert.deepEqual(options.options.value, []);
+});
+
+test('labels omit empty term and section instead of rendering empty parentheses', async () => {
+  const fetchPage = async () =>
+    pageOf(
+      [
+        { id: 1, course: { code: 'COS10', name: 'Intro' } },
+        { id: 2, course: { code: 'COS20', name: 'Web' }, section: 'A' },
+      ],
+      1,
+      1,
+    );
+  const options = useAttendanceClassOptions({ fetchPage });
+
+  await options.load();
+
+  assert.deepEqual(
+    options.options.value.map((o) => o.label),
+    ['COS10 - Intro', 'COS20 - Web (Sec A)'],
+  );
 });

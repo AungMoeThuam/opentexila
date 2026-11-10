@@ -35,6 +35,12 @@ const {
   retry: retryClassOptions,
 } = useAttendanceClassOptions({ fetchPage: fetchAttendanceClassOptions });
 
+const selectedClassMissing = computed(
+  () =>
+    filters.classId !== '' &&
+    !availableClasses.value.some((c) => c.id === filters.classId),
+);
+
 let abortController = null;
 
 const hasActiveFilters = computed(() => {
@@ -244,20 +250,34 @@ onBeforeUnmount(() => {
               id="filter-class"
               v-model="filters.classId"
               class="form-select form-select-sm"
-              :disabled="classOptionsLoading || !!classOptionsError"
+              :disabled="classOptionsLoading"
               :aria-busy="classOptionsLoading"
               @change="handleFilterChange"
             >
               <option value="">
                 {{ classOptionsLoading ? 'Loading classes…' : 'All classes' }}
               </option>
+              <option
+                v-if="selectedClassMissing"
+                :key="filters.classId"
+                :value="filters.classId"
+              >
+                Selected class
+              </option>
               <option v-for="c in availableClasses" :key="c.id" :value="c.id">
                 {{ c.label }}
               </option>
             </select>
+            <span
+              v-if="classOptionsLoading"
+              class="visually-hidden"
+              role="status"
+            >
+              Loading classes
+            </span>
             <div
               v-if="classOptionsError"
-              class="form-text text-danger d-flex align-items-center gap-2"
+              class="ot-notice ot-notice--error d-flex align-items-center gap-2 mt-1 py-1 px-2 small"
               role="alert"
             >
               <span>Unable to load classes.</span>
