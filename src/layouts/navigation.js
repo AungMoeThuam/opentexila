@@ -40,7 +40,7 @@ const navigation = [
     roles: ['admin'],
   },
   {
-    label: 'Account invitations',
+    label: 'Create account',
     icon: 'users',
     to: '/admin/invitations',
     roles: ['admin'],

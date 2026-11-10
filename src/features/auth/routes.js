@@ -19,8 +19,7 @@ export const protectedAuthRoutes = [
   {
     path: 'admin/invitations',
     name: 'invitations',
-    component: page,
-    props: { title: 'Account invitations' },
+    component: () => import('./pages/AdminCreateAccountPage.vue'),
     meta: { roles: ['admin'] },
   },
 ];
