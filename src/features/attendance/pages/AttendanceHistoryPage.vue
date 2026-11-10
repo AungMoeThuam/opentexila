@@ -2,7 +2,11 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount } from 'vue';
 import RequestState from '../../../shared/components/RequestState.vue';
 import AppIcon from '../../../shared/components/AppIcon.vue';
-import { fetchPersonalAttendanceRecords } from '../services/attendance-service';
+import {
+  fetchPersonalAttendanceRecords,
+  fetchAttendanceClassOptions,
+} from '../services/attendance-service';
+import { useAttendanceClassOptions } from '../composables/use-attendance-class-options';
 
 const records = ref([]);
 const meta = ref({
@@ -23,24 +27,13 @@ const filters = reactive({
   includeCancelled: false,
 });
 
-const knownClasses = reactive(new Map());
-const availableClasses = computed(() =>
-  [...knownClasses.values()].sort((a, b) => a.label.localeCompare(b.label)),
-);
-
-function rememberClasses(items) {
-  for (const item of items) {
-    const cls = item?.class;
-    if (!cls?.id) continue;
-    const code = cls.course?.code ?? '';
-    const name = cls.course?.name ?? '';
-    const section = cls.section ? ` (Sec ${cls.section})` : '';
-    knownClasses.set(cls.id, {
-      id: cls.id,
-      label: `${code} - ${name}${section}`,
-    });
-  }
-}
+const {
+  options: availableClasses,
+  loading: classOptionsLoading,
+  error: classOptionsError,
+  load: loadClassOptions,
+  retry: retryClassOptions,
+} = useAttendanceClassOptions({ fetchPage: fetchAttendanceClassOptions });
 
 let abortController = null;
 
@@ -160,7 +153,6 @@ async function loadAttendance(page = 1) {
     });
 
     records.value = response.data || [];
-    rememberClasses(records.value);
     meta.value = response.meta || {
       page: 1,
       limit: 20,
@@ -207,6 +199,7 @@ function goToPage(page) {
 }
 
 onMounted(() => {
+  loadClassOptions();
   loadAttendance(1);
 });
 
@@ -251,13 +244,37 @@ onBeforeUnmount(() => {
               id="filter-class"
               v-model="filters.classId"
               class="form-select form-select-sm"
+              :disabled="classOptionsLoading || !!classOptionsError"
+              :aria-busy="classOptionsLoading"
               @change="handleFilterChange"
             >
-              <option value="">All enrolled classes</option>
+              <option value="">
+                {{ classOptionsLoading ? 'Loading classes…' : 'All classes' }}
+              </option>
               <option v-for="c in availableClasses" :key="c.id" :value="c.id">
                 {{ c.label }}
               </option>
             </select>
+            <div
+              v-if="classOptionsError"
+              class="form-text text-danger d-flex align-items-center gap-2"
+              role="alert"
+            >
+              <span>Unable to load classes.</span>
+              <button
+                type="button"
+                class="btn btn-link btn-sm p-0"
+                @click="retryClassOptions"
+              >
+                Retry
+              </button>
+            </div>
+            <div
+              v-else-if="!classOptionsLoading && availableClasses.length === 0"
+              class="form-text"
+            >
+              No classes found.
+            </div>
           </div>
 
           <!-- Date From -->
