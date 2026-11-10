@@ -1,9 +1,9 @@
 export function homeForRole(role) {
   return role === 'student'
-    ? '/my-classes'
+    ? '/student/home'
     : role === 'lecturer'
-      ? '/lecturer/attendance'
-      : '/admin/enrolments';
+      ? '/lecturer/home'
+      : '/admin/home';
 }
 
 export function safeRedirect(value, fallback = '/') {

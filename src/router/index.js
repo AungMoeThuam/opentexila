@@ -6,8 +6,9 @@ import { publicAuthRoutes, protectedAuthRoutes } from '../features/auth/routes';
 import enrolmentRoutes from '../features/enrolments/routes';
 import attendanceRoutes from '../features/attendance/routes';
 import courseRoutes from '../features/courses/routes';
+import dashboardRoutes from '../features/dashboard/routes';
 import { auth } from '../app-context';
-import { createAccessGuard } from './access';
+import { createAccessGuard, homeForRole } from './access';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,6 +30,12 @@ const router = createRouter({
           path: '',
           name: 'home',
           component: () => import('../shared/pages/WelcomePage.vue'),
+          // Signed-in users go straight to their role home.
+          beforeEnter: async () => {
+            await auth.restore();
+            const user = auth.state.user;
+            return user ? homeForRole(user.role) : true;
+          },
         },
         ...publicAuthRoutes,
         {
@@ -44,6 +51,7 @@ const router = createRouter({
       meta: { requiresAuth: true },
       children: [
         ...protectedAuthRoutes,
+        ...dashboardRoutes,
         ...enrolmentRoutes,
         ...attendanceRoutes,
         ...courseRoutes,

@@ -1,7 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createAuth } from '../src/features/auth/store/create-auth.js';
-import { createAccessGuard, safeRedirect } from '../src/router/access.js';
+import {
+  createAccessGuard,
+  homeForRole,
+  safeRedirect,
+} from '../src/router/access.js';
+import dashboardRoutes from '../src/features/dashboard/routes.js';
 import { navigationForRole } from '../src/layouts/navigation.js';
 import { profile } from './helpers/fixtures.js';
 import routes from '../src/features/enrolments/routes.js';
@@ -54,6 +59,15 @@ test('guards distinguish guest, forbidden and unavailable; menus follow roles', 
     assert.equal(safeRedirect(redirect, '/my-classes'), '/my-classes');
   }
   assert.equal(safeRedirect('/attendance/history'), '/attendance/history');
+});
+
+test('each role has its own home route, redirect target and menu link', () => {
+  for (const role of ['student', 'lecturer', 'admin']) {
+    const route = dashboardRoutes.find((r) => r.name === `${role}-home`);
+    assert.deepEqual(route.meta.roles, [role]);
+    assert.equal(homeForRole(role), `/${route.path}`);
+    assert.equal(navigationForRole(role)[0].to, homeForRole(role));
+  }
 });
 
 test('assigned classes navigation and route are lecturer-only', () => {

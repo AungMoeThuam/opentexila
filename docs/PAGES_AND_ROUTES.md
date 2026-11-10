@@ -182,13 +182,13 @@ Each member builds their frontend pages and related backend APIs. This is a plan
 
 Use seeded courses, classes, users and class sessions initially. Shared error pages already exist. Agree API request/response contracts and mock data before parallel implementation so page development can proceed independently.
 
-Until dedicated dashboards are built, proposed role landing redirects are:
+Each role has its own home page (feature `src/features/dashboard/`). The pages are placeholders until their content issues land. `homeForRole()` returns these paths, and a signed-in user opening `/` is redirected to theirs:
 
-| Entry routes                       | Temporary destination  |
-| ---------------------------------- | ---------------------- |
-| `/student`, `/student/dashboard`   | `/student/classes`     |
-| `/lecturer`, `/lecturer/dashboard` | `/lecturer/attendance` |
-| `/admin`, `/admin/dashboard`       | `/admin/enrolments`    |
+| Role     | Home route       | Route name      |
+| -------- | ---------------- | --------------- |
+| Student  | `/student/home`  | `student-home`  |
+| Lecturer | `/lecturer/home` | `lecturer-home` |
+| Admin    | `/admin/home`    | `admin-home`    |
 
 ## Existing scaffold versus planned routes
 
