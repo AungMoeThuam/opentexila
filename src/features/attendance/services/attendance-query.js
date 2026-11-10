@@ -42,3 +42,21 @@ export function buildPersonalAttendanceQuery(params = {}) {
     ? `/me/attendance-records?${queryString}`
     : '/me/attendance-records';
 }
+
+export function buildAttendanceClassOptionsQuery(params = {}) {
+  const query = new URLSearchParams();
+
+  if (params.page !== undefined && params.page !== null) {
+    query.set('page', String(params.page));
+  }
+
+  if (params.limit !== undefined && params.limit !== null) {
+    query.set('limit', String(params.limit));
+  }
+
+  const queryString = query.toString();
+
+  return queryString
+    ? `/me/attendance-records/classes?${queryString}`
+    : '/me/attendance-records/classes';
+}
