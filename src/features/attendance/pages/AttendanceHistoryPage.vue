@@ -378,7 +378,7 @@ onBeforeUnmount(() => {
             </div>
             <button
               type="button"
-              class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center ms-auto"
+              class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center ms-auto reset-filters-btn"
               :disabled="!hasActiveFilters"
               @click="resetFilters"
             >
@@ -584,6 +584,13 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* Full-width reset button on narrow screens, matching the stacked fields. */
+@media (max-width: 767.98px) {
+  .reset-filters-btn {
+    width: 100%;
+  }
+}
+
 .table-hover tbody tr:hover {
   background-color: rgba(0, 0, 0, 0.02);
 }
