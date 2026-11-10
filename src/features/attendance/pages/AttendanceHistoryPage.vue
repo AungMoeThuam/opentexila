@@ -239,7 +239,7 @@ onBeforeUnmount(() => {
           class="row g-3 align-items-end"
         >
           <!-- Class Filter -->
-          <div class="col-12 col-md-4 col-lg-3">
+          <div class="col-12 col-md-6 col-lg-3">
             <label
               for="filter-class"
               class="form-label fw-semibold small text-muted"
@@ -278,7 +278,7 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- Date From -->
-          <div class="col-6 col-md-3 col-lg-2">
+          <div class="col-6 col-md-3 col-lg-3">
             <label
               for="filter-from"
               class="form-label fw-semibold small text-muted"
@@ -295,7 +295,7 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- Date To -->
-          <div class="col-6 col-md-3 col-lg-2">
+          <div class="col-6 col-md-3 col-lg-3">
             <label
               for="filter-to"
               class="form-label fw-semibold small text-muted"
@@ -312,7 +312,7 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- Status Filter -->
-          <div class="col-6 col-md-3 col-lg-2">
+          <div class="col-6 col-md-3 col-lg-3">
             <label
               for="filter-status"
               class="form-label fw-semibold small text-muted"
@@ -333,30 +333,26 @@ onBeforeUnmount(() => {
             </select>
           </div>
 
-          <!-- Include Cancelled Checkbox -->
-          <div class="col-6 col-md-4 col-lg-auto">
-            <div class="form-check mb-1">
-              <input
-                id="filter-cancelled"
-                type="checkbox"
-                v-model="filters.includeCancelled"
-                class="form-check-input"
-                @change="handleFilterChange"
-              />
-              <label
-                for="filter-cancelled"
-                class="form-check-label small fw-medium"
-              >
-                Include cancelled
-              </label>
-            </div>
-          </div>
-
           <!-- Footer: lookup status on the left, reset on the right -->
           <div
             class="col-12 d-flex flex-wrap align-items-center justify-content-between gap-2"
           >
-            <div class="small">
+            <div class="d-flex flex-wrap align-items-center gap-3 small">
+              <div class="form-check mb-0">
+                <input
+                  id="filter-cancelled"
+                  type="checkbox"
+                  v-model="filters.includeCancelled"
+                  class="form-check-input"
+                  @change="handleFilterChange"
+                />
+                <label
+                  for="filter-cancelled"
+                  class="form-check-label small fw-medium"
+                >
+                  Include cancelled
+                </label>
+              </div>
               <div
                 v-if="classOptionsError"
                 class="ot-notice ot-notice--error d-inline-flex align-items-center gap-2 py-1 px-2"
