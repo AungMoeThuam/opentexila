@@ -16,3 +16,7 @@ One scheduled meeting of a class.
 **Attendance roster**:
 The per-student attendance records for one class session.
 _Avoid_: roster (unqualified)
+
+**Availability**:
+Where a class session stands relative to now: upcoming, in progress, ended or cancelled. The backend supplies it; it is not stored on the class session.
+_Avoid_: status (reserved for attendance status)
