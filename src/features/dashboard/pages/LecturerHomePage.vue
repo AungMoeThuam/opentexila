@@ -33,7 +33,7 @@ onMounted(load);
     <div class="col-12 col-md-6">
       <router-link
         to="/lecturer/classes"
-        class="ot-card ot-card__link d-block p-3 text-decoration-none h-100"
+        class="ot-card d-block p-3 text-decoration-none text-reset h-100"
       >
         <h2 class="ot-card__title">My classes</h2>
         <p class="ot-meta mb-0">
@@ -44,7 +44,7 @@ onMounted(load);
     <div class="col-12 col-md-6">
       <router-link
         to="/lecturer/attendance"
-        class="ot-card ot-card__link d-block p-3 text-decoration-none h-100"
+        class="ot-card d-block p-3 text-decoration-none text-reset h-100"
       >
         <h2 class="ot-card__title">Attendance</h2>
         <p class="ot-meta mb-0">
