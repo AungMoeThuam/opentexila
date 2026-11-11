@@ -31,18 +31,16 @@ const view = computed(() => {
     class="ot-card d-flex flex-column flex-sm-row gap-2 justify-content-between align-items-sm-center p-3"
   >
     <div>
-      <h3 class="ot-card__title mb-1">
-        {{ view.code }} {{ view.name }}
-        <span class="ot-meta">· Section {{ view.section }}</span>
-      </h3>
+      <h3 class="ot-card__title mb-1">{{ view.code }} {{ view.name }}</h3>
       <p class="ot-meta mb-0">
-        {{ view.date }}, {{ view.time }} · Room {{ view.room }}
+        Section {{ view.section }} · Room {{ view.room }}
       </p>
+      <p class="ot-meta mb-0">{{ view.date }}, {{ view.time }}</p>
     </div>
     <div class="d-flex align-items-center gap-3">
       <AvailabilityBadge :availability="session.availability" />
       <router-link
-        class="btn btn-outline-primary btn-sm"
+        class="btn btn-outline-primary btn-sm text-nowrap"
         :to="view.path"
         :aria-label="view.label"
       >
