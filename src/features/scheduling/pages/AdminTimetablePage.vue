@@ -1,18 +1,19 @@
 <script setup>
-import {
-  computed,
-  onMounted,
-  onUnmounted,
-  ref,
-} from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
-import { onBeforeRouteLeave } from 'vue-router'
+import { onBeforeRouteLeave } from 'vue-router';
 
-import TimetableGrid from '../components/TimetableGrid.vue'
+import TimetableGrid from '../components/TimetableGrid.vue';
 
-import { useTimetable } from '../composables/use-timetable.js'
+import { useTimetable } from '../composables/use-timetable.js';
+import { api } from '../../../app-context.js';
+import { createTimetableService } from '../services/timetable-service.js';
 
-const timetable = useTimetable()
+const timetable = useTimetable();
+const timetableApi = createTimetableService({ api });
+const isLoading = ref(false);
+const isSaving = ref(false);
+let currentRequest = null;
 
 const {
   sessions,
@@ -28,288 +29,216 @@ const {
   discardChanges,
   loadSessions,
   prepareSave,
-} = timetable
+} = timetable;
 
-const message = ref('')
-const messageType = ref('success')
+const message = ref('');
+const messageType = ref('success');
 
-const showMoveDialog = ref(false)
-const selectedSession = ref(null)
+const showMoveDialog = ref(false);
+const selectedSession = ref(null);
 
-const moveDate = ref('')
-const moveStart = ref('')
-const moveEndDate = ref('')
-const moveEnd = ref('')
-const moveError = ref('')
-
-const previewMode = true
+const moveDate = ref('');
+const moveStart = ref('');
+const moveEndDate = ref('');
+const moveEnd = ref('');
+const moveError = ref('');
 
 function localDateKey(date) {
-  const year = date.getFullYear()
+  const year = date.getFullYear();
 
-  const month = String(
-    date.getMonth() + 1,
-  ).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0');
 
-  const day = String(
-    date.getDate(),
-  ).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0');
 
-  return `${year}-${month}-${day}`
+  return `${year}-${month}-${day}`;
 }
 
 function getMonday(value = new Date()) {
-  const date = new Date(value)
+  const date = new Date(value);
 
-  date.setHours(0, 0, 0, 0)
+  date.setHours(0, 0, 0, 0);
 
-  const day = date.getDay()
+  const day = date.getDay();
 
-  date.setDate(
-    date.getDate() - ((day + 6) % 7),
-  )
+  date.setDate(date.getDate() - ((day + 6) % 7));
 
-  return date
+  return date;
 }
 
 function addDays(value, amount) {
-  const date = new Date(value)
+  const date = new Date(value);
 
-  date.setDate(date.getDate() + amount)
+  date.setDate(date.getDate() + amount);
 
-  return date
+  return date;
 }
 
 function toLocalTime(value) {
-  const date = new Date(value)
+  const date = new Date(value);
 
-  const hour = String(
-    date.getHours(),
-  ).padStart(2, '0')
+  const hour = String(date.getHours()).padStart(2, '0');
 
-  const minute = String(
-    date.getMinutes(),
-  ).padStart(2, '0')
+  const minute = String(date.getMinutes()).padStart(2, '0');
 
-  return `${hour}:${minute}`
+  return `${hour}:${minute}`;
 }
 
-const weekStart = ref(
-  localDateKey(getMonday()),
-)
+const weekStart = ref(localDateKey(getMonday()));
 
 const weekEnd = computed(() =>
-  localDateKey(
-    addDays(
-      new Date(`${weekStart.value}T00:00:00`),
-      6,
-    ),
-  ),
-)
+  localDateKey(addDays(new Date(`${weekStart.value}T00:00:00`), 6)),
+);
 
 const weekLabel = computed(() => {
-  const formatter = new Intl.DateTimeFormat(
-    'en-GB',
-    {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    },
-  )
+  const formatter = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 
   return `${formatter.format(
     new Date(`${weekStart.value}T00:00:00`),
-  )} – ${formatter.format(
-    new Date(`${weekEnd.value}T00:00:00`),
-  )}`
-})
+  )} – ${formatter.format(new Date(`${weekEnd.value}T00:00:00`))}`;
+});
 
 function notify(text, type = 'success') {
-  message.value = text
-  messageType.value = type
+  message.value = text;
+  messageType.value = type;
 }
 
-// Temporary demo data for frontend UI development.
-// Replace with the real Backend #32 API.
-function createPreviewSessions() {
-  const firstDay = new Date(
-    `${weekStart.value}T00:00:00`,
-  )
+// Query UTC days around the local week boundaries so that sessions
+// close to midnight in the user's timezone are not missed.
+function dateShift(dateKey, days) {
+  return new Date(`${dateKey}T00:00:00.000Z`).getTime() + days * 86400000;
+}
 
-  const definitions = [
-    {
-      id: 1,
-      class_id: 1,
-      code: 'COS30043',
-      name: 'Interface Design and Development',
-      section: 'A',
-      lecturerId: 2,
-      lecturerName: 'Lecturer One',
-      room: 'Demo Room 1',
-      day: 0,
-      hour: 9,
-    },
-    {
-      id: 2,
-      class_id: 2,
-      code: 'COS20007',
-      name: 'Object Oriented Programming',
-      section: 'A',
-      lecturerId: 3,
-      lecturerName: 'Lecturer Two',
-      room: 'Demo Room 2',
-      day: 1,
-      hour: 10,
-    },
-    {
-      id: 3,
-      class_id: 3,
-      code: 'COS10009',
-      name: 'Introduction to Programming',
-      section: 'B',
-      lecturerId: 2,
-      lecturerName: 'Lecturer One',
-      room: 'Demo Room 1',
-      day: 2,
-      hour: 13,
-    },
-    {
-      id: 4,
-      class_id: 4,
-      code: 'COS20031',
-      name: 'Database Design and Development',
-      section: 'A',
-      lecturerId: 4,
-      lecturerName: 'Lecturer Three',
-      room: 'Demo Room 3',
-      day: 4,
-      hour: 14,
-    },
-  ]
+function utcDateKey(timestamp) {
+  return new Date(timestamp).toISOString().slice(0, 10);
+}
 
-  return definitions.map((item) => {
-    const start = addDays(firstDay, item.day)
+async function loadRealSessions({ preserveOnError = false } = {}) {
+  currentRequest?.abort();
 
-    start.setHours(item.hour, 0, 0, 0)
+  const controller = new AbortController();
+  currentRequest = controller;
+  isLoading.value = true;
 
-    const end = new Date(
-      start.getTime() + 120 * 60 * 1000,
-    )
+  if (!preserveOnError) {
+    message.value = '';
+    loadSessions([]);
+  }
 
-    const late = new Date(
-      start.getTime() + 10 * 60 * 1000,
-    )
+  const firstLocalDay = weekStart.value;
+  const lastLocalDay = weekEnd.value;
 
-    return {
-      id: item.id,
-      class_id: item.class_id,
-      course: {
-        code: item.code,
-        name: item.name,
+  try {
+    const data = await timetableApi.list(
+      {
+        from: utcDateKey(dateShift(firstLocalDay, -1)),
+        to: utcDateKey(dateShift(lastLocalDay, 1)),
       },
-      section: item.section,
-      lecturer: {
-        id: item.lecturerId,
-        name: item.lecturerName,
-      },
-      room_label: item.room,
-      starts_at: start.toISOString(),
-      late_after: late.toISOString(),
-      ends_at: end.toISOString(),
-      status: 'scheduled',
+      { signal: controller.signal },
+    );
+
+    if (controller.signal.aborted) return false;
+
+    const start = new Date(`${firstLocalDay}T00:00:00`).getTime();
+
+    const end = new Date(`${lastLocalDay}T00:00:00`).getTime() + 86400000;
+
+    const visibleSessions = data.filter(
+      (session) =>
+        new Date(session.starts_at).getTime() < end &&
+        new Date(session.ends_at).getTime() > start,
+    );
+
+    loadSessions(visibleSessions);
+
+    return true;
+  } catch (error) {
+    if (controller.signal.aborted) return false;
+
+    if (!preserveOnError) {
+      notify(error?.message || 'Unable to load the timetable.', 'danger');
     }
-  })
-}
 
-function loadPreview() {
-  loadSessions(createPreviewSessions())
-  message.value = ''
+    return false;
+  } finally {
+    if (currentRequest === controller) {
+      isLoading.value = false;
+      currentRequest = null;
+    }
+  }
 }
 
 function confirmDiscard() {
-  if (!isDirty.value) {
-    return true
+  if (isSaving.value || isLoading.value) {
+    return false;
   }
 
-  return window.confirm(
-    'You have unsaved timetable changes. Discard them?',
-  )
+  if (!isDirty.value) {
+    return true;
+  }
+
+  return window.confirm('You have unsaved timetable changes. Discard them?');
 }
 
 function changeWeek(amount) {
   if (!confirmDiscard()) {
-    return
+    return;
   }
 
-  const date = new Date(
-    `${weekStart.value}T00:00:00`,
-  )
+  const date = new Date(`${weekStart.value}T00:00:00`);
 
-  weekStart.value = localDateKey(
-    addDays(date, amount * 7),
-  )
+  weekStart.value = localDateKey(addDays(date, amount * 7));
 
-  loadPreview()
+  loadRealSessions();
 }
 
 function goToCurrentWeek() {
   if (!confirmDiscard()) {
-    return
+    return;
   }
 
-  weekStart.value = localDateKey(getMonday())
+  weekStart.value = localDateKey(getMonday());
 
-  loadPreview()
+  loadRealSessions();
 }
 
 function handleMove(sessionId, newStartTime) {
-  const result = moveSession(
-    sessionId,
-    newStartTime,
-  )
+  const result = moveSession(sessionId, newStartTime);
 
-  notify(
-    result.message,
-    result.success ? 'success' : 'danger',
-  )
+  notify(result.message, result.success ? 'success' : 'danger');
 }
 
 function openMoveDialog(session) {
-  selectedSession.value = session
+  selectedSession.value = session;
 
-  moveDate.value = localDateKey(
-    new Date(session.starts_at),
-  )
+  moveDate.value = localDateKey(new Date(session.starts_at));
 
-  moveStart.value = toLocalTime(
-    session.starts_at,
-  )
+  moveStart.value = toLocalTime(session.starts_at);
 
-  moveEndDate.value = localDateKey(
-    new Date(session.ends_at),
-  )
+  moveEndDate.value = localDateKey(new Date(session.ends_at));
 
-  moveEnd.value = toLocalTime(
-    session.ends_at,
-  )
+  moveEnd.value = toLocalTime(session.ends_at);
 
-  moveError.value = ''
-  showMoveDialog.value = true
+  moveError.value = '';
+  showMoveDialog.value = true;
 }
 
 function closeMoveDialog() {
-  showMoveDialog.value = false
-  selectedSession.value = null
-  moveError.value = ''
+  showMoveDialog.value = false;
+  selectedSession.value = null;
+  moveError.value = '';
 }
 
 function updateEndDate() {
-  moveEndDate.value = moveDate.value
+  moveEndDate.value = moveDate.value;
 }
 
 function submitMove() {
   if (!selectedSession.value) {
-    return
+    return;
   }
 
   if (
@@ -318,191 +247,190 @@ function submitMove() {
     !moveEndDate.value ||
     !moveEnd.value
   ) {
-    moveError.value = 'Please complete all time fields.'
-    return
+    moveError.value = 'Please complete all time fields.';
+    return;
   }
 
-  if (
-    moveDate.value < weekStart.value ||
-    moveDate.value > weekEnd.value
-  ) {
-    moveError.value =
-      'Please select a start date within this week.'
-    return
+  if (moveDate.value < weekStart.value || moveDate.value > weekEnd.value) {
+    moveError.value = 'Please select a start date within this week.';
+    return;
   }
 
-  const start = new Date(
-    `${moveDate.value}T${moveStart.value}:00`,
-  )
+  const start = new Date(`${moveDate.value}T${moveStart.value}:00`);
 
-  const end = new Date(
-    `${moveEndDate.value}T${moveEnd.value}:00`,
-  )
+  const end = new Date(`${moveEndDate.value}T${moveEnd.value}:00`);
 
-  if (
-    Number.isNaN(start.getTime()) ||
-    Number.isNaN(end.getTime())
-  ) {
-    moveError.value = 'Invalid date or time.'
-    return
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    moveError.value = 'Invalid date or time.';
+    return;
   }
 
   const result = moveSession(
     selectedSession.value.id,
     start.toISOString(),
     end.toISOString(),
-  )
+  );
 
   if (!result.success) {
-    moveError.value = result.message
-    return
+    moveError.value = result.message;
+    return;
   }
 
-  closeMoveDialog()
+  closeMoveDialog();
 
-  notify(result.message)
+  notify(result.message);
 }
 
 function handleUndo() {
   if (undo()) {
-    notify('Last timetable change undone.')
+    notify('Last timetable change undone.');
   }
 }
 
 function handleRedo() {
   if (redo()) {
-    notify('Timetable change restored.')
+    notify('Timetable change restored.');
   }
 }
 
 function handleDiscard() {
   if (!isDirty.value) {
-    return
+    return;
   }
 
   if (!confirmDiscard()) {
-    return
+    return;
   }
 
-  discardChanges()
+  discardChanges();
 
-  notify('Unsaved changes discarded.')
+  notify('Unsaved changes discarded.');
 }
 
-function handleSave() {
-  const result = prepareSave()
+async function handleSave() {
+  if (isSaving.value || isLoading.value) return;
+
+  const result = prepareSave();
 
   if (!result.success) {
-    notify(result.message, 'danger')
-    return
+    notify(result.message, 'danger');
+    return;
   }
 
-  // No database writes in preview mode.
-  notify(
-    'Draft validated. Database saving will be available after Backend #32 integration.',
-    'info',
-  )
+  isSaving.value = true;
 
-  console.log(
-    'Timetable batch payload:',
-    result.payload,
-  )
+  let savedSessions;
+
+  try {
+    savedSessions = await timetableApi.updateBatch(result.payload.changes);
+  } catch (error) {
+    notify(error?.message || 'Unable to save timetable changes.', 'danger');
+    isSaving.value = false;
+    return;
+  }
+
+  // PATCH succeeded. Update the local baseline so
+  // changes are no longer marked as unsaved.
+  const savedById = new Map(
+    savedSessions.map((session) => [session.id, session]),
+  );
+
+  const updatedSessions = sessions.value.map(
+    (session) => savedById.get(session.id) ?? session,
+  );
+
+  loadSessions(updatedSessions);
+
+  try {
+    const refreshed = await loadRealSessions({
+      preserveOnError: true,
+    });
+
+    if (refreshed) {
+      notify('Timetable changes saved successfully.');
+    } else {
+      notify(
+        'Changes were saved, but the timetable could not be refreshed. Please reload the page later.',
+        'warning',
+      );
+    }
+  } finally {
+    isSaving.value = false;
+  }
 }
 
 function handleKeyboard(event) {
   if (showMoveDialog.value) {
-    return
+    return;
   }
 
-  const target = event.target
+  const target = event.target;
 
-  if (
-    target?.matches?.(
-      'input, textarea, select, [contenteditable]',
-    )
-  ) {
-    return
+  if (target?.matches?.('input, textarea, select, [contenteditable]')) {
+    return;
   }
 
   if (!event.ctrlKey && !event.metaKey) {
-    return
+    return;
   }
 
-  const key = event.key.toLowerCase()
+  const key = event.key.toLowerCase();
 
   if (key === 'z' && !event.shiftKey) {
-    event.preventDefault()
-    handleUndo()
-  } else if (
-    key === 'y' ||
-    (key === 'z' && event.shiftKey)
-  ) {
-    event.preventDefault()
-    handleRedo()
+    event.preventDefault();
+    handleUndo();
+  } else if (key === 'y' || (key === 'z' && event.shiftKey)) {
+    event.preventDefault();
+    handleRedo();
   }
 }
 
 function handleBeforeUnload(event) {
   if (isDirty.value) {
-    event.preventDefault()
-    event.returnValue = ''
+    event.preventDefault();
+    event.returnValue = '';
   }
 }
 
 onBeforeRouteLeave(() => {
-  return confirmDiscard()
-})
+  return confirmDiscard();
+});
 
 onMounted(() => {
-  loadPreview()
+  loadRealSessions();
 
-  window.addEventListener(
-    'keydown',
-    handleKeyboard,
-  )
+  window.addEventListener('keydown', handleKeyboard);
 
-  window.addEventListener(
-    'beforeunload',
-    handleBeforeUnload,
-  )
-})
+  window.addEventListener('beforeunload', handleBeforeUnload);
+});
 
 onUnmounted(() => {
-  window.removeEventListener(
-    'keydown',
-    handleKeyboard,
-  )
+  currentRequest?.abort();
+  window.removeEventListener('keydown', handleKeyboard);
 
-  window.removeEventListener(
-    'beforeunload',
-    handleBeforeUnload,
-  )
-})
+  window.removeEventListener('beforeunload', handleBeforeUnload);
+});
 </script>
 
 <template>
   <main class="timetable-page">
     <header class="mb-4">
-      <div class="timetable-eyebrow">
-        ADMIN · TIMETABLE
-      </div>
+      <div class="timetable-eyebrow">ADMIN · TIMETABLE</div>
 
-      <h1 class="ot-page-title">
-        Class Timetable
-      </h1>
+      <h1 class="ot-page-title">Class Timetable</h1>
 
       <p class="text-secondary mb-0">
-        Arrange and reschedule class sessions
-        using the weekly timetable.
+        Arrange and reschedule class sessions using the weekly timetable.
       </p>
     </header>
 
-    <div
-      v-if="previewMode"
-      class="alert alert-warning"
-    >
-      Development preview — temporary sample sessions.
-      Database saving is not connected yet.
+    <div class="alert alert-info" role="status">
+      Live database timetable · Drag sessions to reschedule, then click Save
+      changes to apply your updates.
+    </div>
+
+    <div v-if="isLoading" class="alert alert-secondary" role="status">
+      Loading timetable sessions…
     </div>
 
     <div
@@ -585,49 +513,38 @@ onUnmounted(() => {
         <button
           type="button"
           class="btn btn-danger"
-          :disabled="!canSave"
+          :disabled="!canSave || isSaving || isLoading"
           @click="handleSave"
         >
-          Save changes
+          {{ isSaving ? 'Saving...' : 'Save changes' }}
         </button>
       </div>
     </section>
 
     <div class="timetable-summary mb-3">
-      <span>
-        {{ sessions.length }} sessions
-      </span>
+      <span> {{ sessions.length }} sessions </span>
 
       <span v-if="isDirty" class="draft-indicator">
         {{ changes.length }} unsaved changes
       </span>
 
-      <span
-        v-if="conflicts.length"
-        class="text-danger fw-semibold"
-      >
+      <span v-if="conflicts.length" class="text-danger fw-semibold">
         {{ conflicts.length }} scheduling conflicts
       </span>
 
-      <span v-else class="text-success">
-        No scheduling conflicts
-      </span>
+      <span v-else class="text-success"> No scheduling conflicts </span>
     </div>
 
-    <div
-      v-if="conflicts.length"
-      class="alert alert-danger"
-      role="alert"
-    >
-      Resolve all class, lecturer and room conflicts
-      before saving your timetable.
+    <div v-if="conflicts.length" class="alert alert-danger" role="alert">
+      Resolve all class, lecturer and room conflicts before saving your
+      timetable.
     </div>
 
     <TimetableGrid
       :sessions="sessions"
       :conflicts="conflicts"
       :week-start="weekStart"
-      :disabled="showMoveDialog"
+      :disabled="showMoveDialog || isLoading"
       @move-session="handleMove"
       @open-move="openMoveDialog"
     />
@@ -645,15 +562,8 @@ onUnmounted(() => {
           aria-modal="true"
           aria-labelledby="move-dialog-title"
         >
-          <div
-            class="d-flex align-items-center justify-content-between mb-3"
-          >
-            <h2
-              id="move-dialog-title"
-              class="h5 mb-0"
-            >
-              Move class session
-            </h2>
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 id="move-dialog-title" class="h5 mb-0">Move class session</h2>
 
             <button
               type="button"
@@ -671,12 +581,7 @@ onUnmounted(() => {
 
           <form @submit.prevent="submitMove">
             <div class="mb-3">
-              <label
-                for="move-date"
-                class="form-label"
-              >
-                Day
-              </label>
+              <label for="move-date" class="form-label"> Day </label>
 
               <input
                 id="move-date"
@@ -691,12 +596,7 @@ onUnmounted(() => {
             </div>
 
             <div class="mb-3">
-              <label
-                for="move-start"
-                class="form-label"
-              >
-                Start time
-              </label>
+              <label for="move-start" class="form-label"> Start time </label>
 
               <input
                 id="move-start"
@@ -708,12 +608,7 @@ onUnmounted(() => {
             </div>
 
             <div class="mb-3">
-              <label
-                for="move-end-date"
-                class="form-label"
-              >
-                End date
-              </label>
+              <label for="move-end-date" class="form-label"> End date </label>
 
               <input
                 id="move-end-date"
@@ -726,12 +621,7 @@ onUnmounted(() => {
             </div>
 
             <div class="mb-3">
-              <label
-                for="move-end"
-                class="form-label"
-              >
-                End time
-              </label>
+              <label for="move-end" class="form-label"> End time </label>
 
               <input
                 id="move-end"
@@ -742,17 +632,11 @@ onUnmounted(() => {
               />
             </div>
 
-            <div
-              v-if="moveError"
-              class="alert alert-danger"
-              role="alert"
-            >
+            <div v-if="moveError" class="alert alert-danger" role="alert">
               {{ moveError }}
             </div>
 
-            <div
-              class="d-flex justify-content-end gap-2 mt-4"
-            >
+            <div class="d-flex justify-content-end gap-2 mt-4">
               <button
                 type="button"
                 class="btn btn-outline-secondary"
@@ -761,12 +645,7 @@ onUnmounted(() => {
                 Cancel
               </button>
 
-              <button
-                type="submit"
-                class="btn btn-danger"
-              >
-                Move session
-              </button>
+              <button type="submit" class="btn btn-danger">Move session</button>
             </div>
           </form>
         </section>

@@ -1,8 +1,7 @@
-
 <script setup>
-import { computed } from 'vue'
+import { computed } from 'vue';
 
-import { isSessionEditable } from '../utils/schedule-conflicts.js'
+import { isSessionEditable } from '../utils/schedule-conflicts.js';
 
 const props = defineProps({
   session: {
@@ -21,32 +20,26 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-})
+});
 
-const emit = defineEmits(['move'])
+const emit = defineEmits(['move']);
 
 const editable = computed(
-  () =>
-    !props.continuation &&
-    isSessionEditable(props.session),
-)
+  () => !props.continuation && isSessionEditable(props.session),
+);
 
-const hasConflict = computed(
-  () => props.conflicts.length > 0,
-)
+const hasConflict = computed(() => props.conflicts.length > 0);
 
 const timeFormatter = new Intl.DateTimeFormat('en-GB', {
   hour: '2-digit',
   minute: '2-digit',
   hour12: false,
-})
+});
 
 function formatTime(value) {
-  const date = new Date(value)
+  const date = new Date(value);
 
-  return Number.isNaN(date.getTime())
-    ? '—'
-    : timeFormatter.format(date)
+  return Number.isNaN(date.getTime()) ? '—' : timeFormatter.format(date);
 }
 
 function conflictLabel(type) {
@@ -54,9 +47,9 @@ function conflictLabel(type) {
     class: 'Class time conflict',
     lecturer: 'Lecturer time conflict',
     room: 'Room time conflict',
-  }
+  };
 
-  return labels[type] || 'Scheduling conflict'
+  return labels[type] || 'Scheduling conflict';
 }
 
 const timeRange = computed(
@@ -64,10 +57,10 @@ const timeRange = computed(
     `${formatTime(props.session.starts_at)} – ${formatTime(
       props.session.ends_at,
     )}`,
-)
+);
 
 const sessionDescription = computed(() => {
-  const session = props.session
+  const session = props.session;
 
   const details = [
     session.course?.code || 'Class',
@@ -76,30 +69,28 @@ const sessionDescription = computed(() => {
     session.lecturer?.name || 'Unassigned lecturer',
     session.room_label || 'No room assigned',
     timeRange.value,
-  ]
+  ];
 
   if (hasConflict.value) {
     details.push(
-      ...props.conflicts.map((conflict) =>
-        conflictLabel(conflict.type),
-      ),
-    )
+      ...props.conflicts.map((conflict) => conflictLabel(conflict.type)),
+    );
   }
 
-  return details.join('\n')
-})
+  return details.join('\n');
+});
 
 const statusLabel = computed(() => {
   if (props.session.status === 'cancelled') {
-    return 'Cancelled'
+    return 'Cancelled';
   }
 
   if (props.continuation) {
-    return 'Continued'
+    return 'Continued';
   }
 
-  return 'Locked'
-})
+  return 'Locked';
+});
 </script>
 
 <template>
@@ -109,8 +100,7 @@ const statusLabel = computed(() => {
       'session-card--compact': compact,
       'session-card--conflict': hasConflict,
       'session-card--locked': !editable,
-      'session-card--cancelled':
-        session.status === 'cancelled',
+      'session-card--cancelled': session.status === 'cancelled',
     }"
     :title="sessionDescription"
     :aria-label="sessionDescription"
@@ -148,11 +138,7 @@ const statusLabel = computed(() => {
           v-if="hasConflict"
           class="compact-conflict"
           role="alert"
-          :title="
-            conflicts
-              .map((item) => conflictLabel(item.type))
-              .join(', ')
-          "
+          :title="conflicts.map((item) => conflictLabel(item.type)).join(', ')"
         >
           ⚠ Conflict
         </span>
@@ -180,22 +166,14 @@ const statusLabel = computed(() => {
       </div>
 
       <div class="session-details">
+        <span> Section {{ session.section }} </span>
+
         <span>
-          Section {{ session.section }}
+          {{ session.lecturer?.name || 'Unassigned lecturer' }}
         </span>
 
         <span>
-          {{
-            session.lecturer?.name ||
-            'Unassigned lecturer'
-          }}
-        </span>
-
-        <span>
-          {{
-            session.room_label ||
-            'No room assigned'
-          }}
+          {{ session.room_label || 'No room assigned' }}
         </span>
 
         <strong class="session-time">
@@ -203,11 +181,7 @@ const statusLabel = computed(() => {
         </strong>
       </div>
 
-      <div
-        v-if="hasConflict"
-        class="session-conflicts"
-        role="alert"
-      >
+      <div v-if="hasConflict" class="session-conflicts" role="alert">
         <div
           v-for="conflict in conflicts"
           :key="`${conflict.type}-${conflict.sessionId}-${conflict.withSessionId}`"
