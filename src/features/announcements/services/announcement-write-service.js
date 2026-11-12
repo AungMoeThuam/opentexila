@@ -2,7 +2,7 @@ import { ApiError } from '../../../shared/services/api-client.js';
 
 const MAX_ID = 4294967295;
 
-function resourceId(value, name) {
+export function resourceId(value, name) {
   const raw = typeof value === 'string' ? value.trim() : value;
   const number =
     typeof raw === 'string' && /^\d+$/.test(raw) ? Number(raw) : raw;
@@ -11,7 +11,7 @@ function resourceId(value, name) {
   return number;
 }
 
-function expectAnnouncement(payload) {
+export function expectAnnouncement(payload) {
   const item = payload?.data;
   if (!item || typeof item !== 'object' || !Number.isInteger(item.id))
     throw new ApiError('The server returned an unexpected announcement.', {

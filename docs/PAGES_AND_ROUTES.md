@@ -197,18 +197,20 @@ Feature folder: `src/features/announcements/`. A lecturer posts news to a class,
 
 The feed has search, a class filter, a category filter, sort (newest, oldest, most liked) and paging. Its filters live in the address, for example `/student/announcements?classId=1&category=exam&sort=oldest&page=2`, so a reload, a shared link or Back restores the same view. One page component serves the three feed routes, and one serves the three detail routes.
 
-| Route                                          | Route name                   | Role     | Page                        | Status                     |
-| ---------------------------------------------- | ---------------------------- | -------- | --------------------------- | -------------------------- |
-| `/student/announcements`                       | `student-announcements`      | Student  | Feed (all enrolled classes) | Built                      |
-| `/lecturer/announcements`                      | `lecturer-announcements`     | Lecturer | Feed (all taught classes)   | Built                      |
-| `/admin/announcements`                         | `admin-announcements`        | Admin    | Feed (all classes)          | Built                      |
-| `/lecturer/announcements/new`                  | `lecturer-announcement-new`  | Lecturer | Form: new announcement      | Built                      |
-| `/lecturer/announcements/:announcementId/edit` | `lecturer-announcement-edit` | Lecturer | Form: edit announcement     | Built                      |
-| `/student/announcements/:announcementId`       | `student-announcement`       | Student  | Detail, likes, comments     | Placeholder (detail issue) |
-| `/lecturer/announcements/:announcementId`      | `lecturer-announcement`      | Lecturer | Detail, likes, comments     | Placeholder (detail issue) |
-| `/admin/announcements/:announcementId`         | `admin-announcement`         | Admin    | Detail, likes, comments     | Placeholder (detail issue) |
+| Route                                          | Route name                   | Role     | Page                        | Status |
+| ---------------------------------------------- | ---------------------------- | -------- | --------------------------- | ------ |
+| `/student/announcements`                       | `student-announcements`      | Student  | Feed (all enrolled classes) | Built  |
+| `/lecturer/announcements`                      | `lecturer-announcements`     | Lecturer | Feed (all taught classes)   | Built  |
+| `/admin/announcements`                         | `admin-announcements`        | Admin    | Feed (all classes)          | Built  |
+| `/lecturer/announcements/new`                  | `lecturer-announcement-new`  | Lecturer | Form: new announcement      | Built  |
+| `/lecturer/announcements/:announcementId/edit` | `lecturer-announcement-edit` | Lecturer | Form: edit announcement     | Built  |
+| `/student/announcements/:announcementId`       | `student-announcement`       | Student  | Detail, likes, comments     | Built  |
+| `/lecturer/announcements/:announcementId`      | `lecturer-announcement`      | Lecturer | Detail, likes, comments     | Built  |
+| `/admin/announcements/:announcementId`         | `admin-announcement`         | Admin    | Detail, likes, comments     | Built  |
 
 The lecturer's "New announcement" button opens `/lecturer/announcements/new`, with `?classId=` when the feed is filtered to one class.
+
+The detail page (`AnnouncementDetailPage.vue`) serves all three roles. It shows the class, category, author, date and the full text as plain text, with a back link to the feed. Students and lecturers like and unlike (the count changes at once and is undone if the request fails) and write comments (1 to 1000 characters). Comments are oldest first with **Load more**. Delete shows only where the server says `can_delete`, after a confirmation. An admin sees the like count without a button and without a comment form, and can delete any comment and the post. A lecturer sees **Edit** on own posts. Components: `LikeButton.vue`, `CommentList.vue`, `CommentForm.vue`.
 
 The form (`AnnouncementFormPage.vue`) has two modes. **Create** has Class (the lecturer's own classes, from `GET /me/classes`), Category, Title and Body, and posts to `POST /classes/:classId/announcements`. `?classId=` chooses the class at the start; an unknown or foreign class is ignored. **Edit** shows the class as text, because a post cannot change class, and sends only the changed fields with `PATCH /announcements/:announcementId`. **Delete announcement** asks for confirmation and calls `DELETE /announcements/:announcementId`. After a save the lecturer goes to the feed (after a create, filtered to the post's class). A 404 shows "not found", a 403 shows the forbidden page, and the typed text stays when a save fails.
 
