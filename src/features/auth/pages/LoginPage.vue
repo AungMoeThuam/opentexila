@@ -200,7 +200,12 @@ async function handleSubmit() {
 .login-card {
   width: 100%;
   max-width: 440px;
+  background-color: #ffffff;
+  border: 1px solid #e2e6eb !important;
   border-radius: 0.75rem;
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.04),
+    0 16px 40px rgba(15, 23, 42, 0.1) !important;
 }
 
 @media (max-width: 576px) {
