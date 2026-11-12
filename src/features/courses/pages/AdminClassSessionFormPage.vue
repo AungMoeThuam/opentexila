@@ -6,11 +6,14 @@ import {
   onMounted,
   reactive,
   ref,
+  watch,
 } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import RequestState from '../../../shared/components/RequestState.vue';
 import { notify } from '../../../shared/composables/notifications.js';
 import FormField from '../components/FormField.vue';
+import ScheduleConflictList from '../components/ScheduleConflictList.vue';
+import { useSessionConflicts } from '../composables/use-session-conflicts.js';
 import {
   DEFAULT_LATE_MINUTES,
   DEFAULT_LENGTH_MINUTES,
@@ -21,10 +24,12 @@ import { formErrorsFrom } from '../services/form-errors.js';
 import {
   classManagementService,
   classSessionsService,
+  timetableService,
 } from '../services/index.js';
 import {
   ADMIN_TIME_ZONE_LABEL,
   addMinutesToInput,
+  zonedInputToDate,
 } from '../services/zoned-time.js';
 
 const route = useRoute();
@@ -50,6 +55,32 @@ let controller;
 let active = true;
 
 const summary = computed(() => sessionSummary(form));
+
+// Sessions that clash with the times typed so far. The warning is advice; the
+// server decides when the session is saved and can send its own list.
+const live = useSessionConflicts({
+  service: timetableService,
+  target: () => ({
+    classId: classInfo.value?.id,
+    lecturerId: classInfo.value?.lecturer?.id,
+    room: classInfo.value?.room_label,
+  }),
+  times: () => ({
+    start: zonedInputToDate(form.starts_at),
+    end: zonedInputToDate(form.ends_at),
+  }),
+});
+const serverConflicts = ref([]);
+const shownConflicts = computed(() =>
+  serverConflicts.value.length ? serverConflicts.value : live.conflicts.value,
+);
+// A new time makes an old server answer out of date.
+watch(
+  () => [form.starts_at, form.late_after, form.ends_at],
+  () => {
+    serverConflicts.value = [];
+  },
+);
 const classTitle = computed(() =>
   classInfo.value
     ? `${classInfo.value.course?.code} · Section ${classInfo.value.section} · ${classInfo.value.term}`
@@ -103,6 +134,7 @@ async function save() {
     return focusFirstError();
   }
   saving.value = true;
+  serverConflicts.value = [];
   try {
     await classSessionsService.create(classId.value, check.payload);
     if (!active) return;
@@ -120,6 +152,7 @@ async function save() {
     const mapped = formErrorsFrom(cause);
     errors.value = mapped.fields;
     notice.value = { tone: 'error', text: mapped.message };
+    serverConflicts.value = cause?.conflicts ?? [];
     focusFirstError();
   } finally {
     saving.value = false;
@@ -270,6 +303,31 @@ onBeforeUnmount(() => {
         data-test="summary"
       >
         {{ summary }}
+      </p>
+      <div
+        v-if="shownConflicts.length"
+        class="ot-notice ot-notice--warning mt-4 mb-0"
+        role="status"
+        data-test="conflicts"
+      >
+        <p class="fw-semibold mb-2">
+          {{
+            serverConflicts.length
+              ? 'The server did not accept this time because it overlaps:'
+              : 'This time overlaps another scheduled session:'
+          }}
+        </p>
+        <ScheduleConflictList :conflicts="shownConflicts" />
+        <p v-if="!serverConflicts.length" class="ot-meta mt-2 mb-0">
+          You can change the times, or try to save and the server will decide.
+        </p>
+      </div>
+      <p
+        v-else-if="live.error.value"
+        class="ot-meta mt-3 mb-0"
+        data-test="conflict-check-failed"
+      >
+        The overlap check could not run. The server checks again when you save.
       </p>
       <div class="d-flex flex-wrap gap-2 mt-4">
         <button type="submit" class="btn btn-primary" :disabled="saving">
