@@ -1,7 +1,7 @@
 import { ApiError } from '../../../shared/services/api-client.js';
 import { buildAnnouncementsPath } from './announcements-service.js';
 
-const CLASSES = {
+export const CLASSES = {
   1: {
     id: 1,
     course: { id: 1, code: 'COS30043', name: 'Interface Design' },
@@ -40,7 +40,7 @@ const post = (
   liked_by_me: likes % 2 === 0,
 });
 
-const POSTS = [
+export const POSTS = [
   post(
     1,
     1,
@@ -130,6 +130,51 @@ export function createMockAnnouncementsService() {
           totalPages: Math.ceil(rows.length / Number(limit)),
         },
       };
+    },
+  };
+}
+
+const notFound = (message) =>
+  new ApiError(message, { status: 404, code: 'RESOURCE_NOT_FOUND' });
+const AUTHOR = { id: 2, name: 'Lecturer One' };
+
+// In-memory create, edit and delete on the same sample posts as the feed, so a
+// new post shows up there. Mock mode blocks live API calls.
+export function createMockAnnouncementWriteService() {
+  const find = (id) => {
+    const found = POSTS.find((item) => item.id === Number(id));
+    if (!found) throw notFound('Announcement not found.');
+    return found;
+  };
+  return {
+    async get(announcementId) {
+      return structuredClone(find(announcementId));
+    },
+    async create(classId, body) {
+      if (!CLASSES[classId]) throw notFound('Class not found.');
+      const now = new Date().toISOString();
+      const created = {
+        id: Math.max(0, ...POSTS.map((item) => item.id)) + 1,
+        class_id: Number(classId),
+        class: CLASSES[classId],
+        ...body,
+        author: AUTHOR,
+        created_at: now,
+        updated_at: now,
+        like_count: 0,
+        comment_count: 0,
+        liked_by_me: false,
+      };
+      POSTS.push(created);
+      return structuredClone(created);
+    },
+    async update(announcementId, body) {
+      const target = find(announcementId);
+      Object.assign(target, body, { updated_at: new Date().toISOString() });
+      return structuredClone(target);
+    },
+    async remove(announcementId) {
+      POSTS.splice(POSTS.indexOf(find(announcementId)), 1);
     },
   };
 }
