@@ -1,10 +1,11 @@
 // Replace each placeholder with an auth-owned page; preserve route names/contracts.
 const page = () => import('../../shared/pages/FeaturePlaceholder.vue');
+
 export const publicAuthRoutes = [
   {
     path: 'login',
     name: 'login',
-    component: page,
+    component: () => import('./pages/LoginPage.vue'),
     props: { title: 'Sign in' },
     meta: { guestOnly: true },
   },
@@ -15,6 +16,7 @@ export const publicAuthRoutes = [
     props: { title: 'Activate your account' },
   },
 ];
+
 export const protectedAuthRoutes = [
   {
     path: 'admin/invitations',
