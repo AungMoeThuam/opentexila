@@ -7,6 +7,9 @@ import {
 
 const props = defineProps({
   context: { type: Object, required: true },
+  // Where the back link goes. The lecturer's roster is the default.
+  backTo: { type: [String, Object], default: '/lecturer/attendance' },
+  backLabel: { type: String, default: 'Back to class sessions' },
 });
 
 const details = computed(() => {
@@ -33,8 +36,8 @@ const details = computed(() => {
 
 <template>
   <div class="ot-card mb-4">
-    <router-link class="d-inline-block mb-3" to="/lecturer/attendance">
-      Back to class sessions
+    <router-link class="d-inline-block mb-3" :to="backTo">
+      {{ backLabel }}
     </router-link>
     <h1 class="ot-page-title mb-3">{{ details.code }} · {{ details.name }}</h1>
     <dl class="ot-dl mb-0">

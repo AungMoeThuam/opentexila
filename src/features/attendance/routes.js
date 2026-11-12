@@ -1,4 +1,3 @@
-const page = () => import('../../shared/pages/FeaturePlaceholder.vue');
 const AttendanceHistoryPage = () => import('./pages/AttendanceHistoryPage.vue');
 
 export default [
@@ -42,8 +41,13 @@ export default [
   {
     path: 'attendance/classes',
     name: 'class-attendance',
-    component: page,
-    props: { title: 'Class attendance' },
+    component: () => import('./pages/AdminClassAttendancePage.vue'),
+    meta: { roles: ['admin'] },
+  },
+  {
+    path: 'attendance/class-sessions/:classSessionId(\\d+)',
+    name: 'admin-class-session-records',
+    component: () => import('./pages/AdminClassSessionRecordsPage.vue'),
     meta: { roles: ['admin'] },
   },
   {
