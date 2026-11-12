@@ -6,6 +6,7 @@ export class ApiError extends Error {
       code = 'REQUEST_FAILED',
       fields = {},
       retryAfter = null,
+      conflicts = [],
     } = {},
   ) {
     super(message);
@@ -14,6 +15,8 @@ export class ApiError extends Error {
     this.code = code;
     this.fields = fields;
     this.retryAfter = retryAfter;
+    // Sessions that clash, sent with a 409 SCHEDULE_CONFLICT.
+    this.conflicts = conflicts;
   }
 }
 
@@ -134,6 +137,7 @@ export function createApiClient({
               ? fields
               : {},
           retryAfter,
+          conflicts: Array.isArray(detail.conflicts) ? detail.conflicts : [],
         },
       );
 
