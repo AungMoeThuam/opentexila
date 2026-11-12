@@ -29,3 +29,7 @@ _Avoid_: failing student
 
 **At-risk threshold**:
 The attendance rate below which a student is at risk. The default is 75%, which is also the lowest allowed value; a lecturer can raise it up to 100% for their own view.
+
+**Availability**:
+Where a class session stands relative to now: upcoming, in progress, ended or cancelled. The backend supplies it; it is not stored on the class session.
+_Avoid_: status (reserved for attendance status)
