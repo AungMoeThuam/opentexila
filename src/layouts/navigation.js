@@ -9,13 +9,31 @@ const navigation = [
     to: '/lecturer/classes',
     roles: ['lecturer'],
   },
+  {
+    label: 'Announcements',
+    icon: 'bell',
+    to: '/lecturer/announcements',
+    roles: ['lecturer'],
+  },
   { label: 'My classes', icon: 'book', to: '/my-classes', roles: ['student'] },
+  {
+    label: 'Announcements',
+    icon: 'bell',
+    to: '/student/announcements',
+    roles: ['student'],
+  },
   { label: 'Courses', icon: 'book', to: '/admin/courses', roles: ['admin'] },
   { label: 'Classes', icon: 'folder', to: '/admin/classes', roles: ['admin'] },
   {
     label: 'Enrolments',
     icon: 'users',
     to: '/admin/enrolments',
+    roles: ['admin'],
+  },
+  {
+    label: 'Announcements',
+    icon: 'bell',
+    to: '/admin/announcements',
     roles: ['admin'],
   },
   {

@@ -6,6 +6,7 @@ import { publicAuthRoutes, protectedAuthRoutes } from '../features/auth/routes';
 import enrolmentRoutes from '../features/enrolments/routes';
 import attendanceRoutes from '../features/attendance/routes';
 import courseRoutes from '../features/courses/routes';
+import announcementRoutes from '../features/announcements/routes';
 import dashboardRoutes from '../features/dashboard/routes';
 import { auth } from '../app-context';
 import { createAccessGuard, homeForRole } from './access';
@@ -55,6 +56,7 @@ const router = createRouter({
         ...enrolmentRoutes,
         ...attendanceRoutes,
         ...courseRoutes,
+        ...announcementRoutes,
         {
           path: 'forbidden',
           name: 'forbidden',
