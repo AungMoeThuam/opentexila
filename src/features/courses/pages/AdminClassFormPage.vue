@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import RequestState from '../../../shared/components/RequestState.vue';
 import { notify } from '../../../shared/composables/notifications.js';
 import FormField from '../components/FormField.vue';
+import GeofencePicker from '../components/GeofencePicker.vue';
 import {
   classManagementService,
   coursesService,
@@ -11,8 +12,6 @@ import {
 } from '../services/index.js';
 import { listAll } from '../services/course-class-services.js';
 import {
-  MAX_RADIUS_M,
-  MIN_RADIUS_M,
   changedFields,
   classFormValues,
   validateClassForm,
@@ -415,86 +414,14 @@ onBeforeUnmount(() => {
               </template>
             </FormField>
           </div>
-          <div class="col-12 col-lg-6">
-            <FormField
-              id="class-radius"
-              label="Attendance radius (metres)"
-              required
-              :error="errors.radius_m"
-              :hint="`${MIN_RADIUS_M} to ${MAX_RADIUS_M} metres.`"
-            >
-              <template #default="field">
-                <input
-                  :id="field.id"
-                  v-model="form.radius_m"
-                  class="form-control"
-                  :class="{ 'is-invalid': field.invalid }"
-                  type="number"
-                  inputmode="decimal"
-                  :min="MIN_RADIUS_M"
-                  :max="MAX_RADIUS_M"
-                  step="any"
-                  required
-                  :disabled="saving"
-                  :aria-invalid="field.invalid"
-                  :aria-describedby="field.describedby"
-                />
-              </template>
-            </FormField>
-          </div>
-          <div class="col-12 col-sm-6">
-            <FormField
-              id="class-latitude"
-              label="Latitude"
-              required
-              :error="errors.latitude"
-              hint="-90 to 90, e.g. -37.8221"
-            >
-              <template #default="field">
-                <input
-                  :id="field.id"
-                  v-model="form.latitude"
-                  class="form-control"
-                  :class="{ 'is-invalid': field.invalid }"
-                  type="number"
-                  inputmode="decimal"
-                  min="-90"
-                  max="90"
-                  step="any"
-                  required
-                  :disabled="saving"
-                  :aria-invalid="field.invalid"
-                  :aria-describedby="field.describedby"
-                />
-              </template>
-            </FormField>
-          </div>
-          <div class="col-12 col-sm-6">
-            <FormField
-              id="class-longitude"
-              label="Longitude"
-              required
-              :error="errors.longitude"
-              hint="-180 to 180, e.g. 145.0389"
-            >
-              <template #default="field">
-                <input
-                  :id="field.id"
-                  v-model="form.longitude"
-                  class="form-control"
-                  :class="{ 'is-invalid': field.invalid }"
-                  type="number"
-                  inputmode="decimal"
-                  min="-180"
-                  max="180"
-                  step="any"
-                  required
-                  :disabled="saving"
-                  :aria-invalid="field.invalid"
-                  :aria-describedby="field.describedby"
-                />
-              </template>
-            </FormField>
+          <div class="col-12">
+            <GeofencePicker
+              v-model:latitude="form.latitude"
+              v-model:longitude="form.longitude"
+              v-model:radius="form.radius_m"
+              :errors="errors"
+              :disabled="saving"
+            />
           </div>
         </div>
       </fieldset>

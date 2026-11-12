@@ -111,31 +111,31 @@ The core attendance overview links directly to class session rosters by `classSe
 
 All routes require the admin role. Initial enrolment management assigns existing students to existing classes; seeded courses, classes and class sessions can support the first milestone.
 
-| Route                                                    | Page and purpose                                                  | Priority                 |
-| -------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------ |
-| `/admin/dashboard`                                       | Institution overview                                              | Next; redirect initially |
-| `/admin/users`                                           | Create accounts with temporary passwords, reset passwords, manage | Core                     |
-| `/admin/users/:userId`                                   | View account details                                              | Next                     |
-| `/admin/users/:userId/edit`                              | Edit supported account fields and status                          | Next                     |
-| `/admin/courses`                                         | List courses                                                      | Next                     |
-| `/admin/courses/new`                                     | Create a course                                                   | Next                     |
-| `/admin/courses/:courseId/edit`                          | Edit course code and name                                         | Next                     |
-| `/admin/classes`                                         | List classes by course and term                                   | Next                     |
-| `/admin/classes/new`                                     | Create a class with its course, term, section and lecturer        | Next                     |
-| `/admin/classes/:classId`                                | View class details                                                | Next                     |
-| `/admin/classes/:classId/edit`                           | Edit class details and supported location settings                | Next                     |
-| `/admin/classes/:classId/schedule`                       | List a class's sessions, filter by state, cancel a session        | Built                    |
-| `/admin/classes/:classId/schedule/new`                   | Schedule a class session                                          | Built                    |
-| `/admin/class-sessions/:classSessionId`                  | View class session details, status and roster                     | Next                     |
-| `/admin/class-sessions/:classSessionId/edit`             | Edit a session subject to backend timing restrictions             | Next                     |
-| `/admin/enrolments`                                      | Select a class to manage enrolments                               | Core                     |
-| `/admin/enrolments/:classId`                             | View roster, add students and remove enrolments                   | Core                     |
-| `/admin/users/:userId/enrolments`                        | Inspect a student's class memberships                             | Next                     |
-| `/admin/attendance`                                      | Institution-wide attendance overview                              | Next                     |
-| `/admin/attendance/classes/:classId`                     | Class attendance summary and sessions                             | Next                     |
-| `/admin/attendance/classes/:classId/students/:studentId` | Student attendance within a class                                 | Next                     |
-| `/admin/attendance/reports`                              | Filter and export attendance data                                 | Optional                 |
-| `/admin/profile`                                         | Own profile and account settings                                  | Next                     |
+| Route                                                    | Page and purpose                                                         | Priority                 |
+| -------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------ |
+| `/admin/dashboard`                                       | Institution overview                                                     | Next; redirect initially |
+| `/admin/users`                                           | Create accounts with temporary passwords, reset passwords, manage        | Core                     |
+| `/admin/users/:userId`                                   | View account details                                                     | Next                     |
+| `/admin/users/:userId/edit`                              | Edit supported account fields and status                                 | Next                     |
+| `/admin/courses`                                         | List courses                                                             | Next                     |
+| `/admin/courses/new`                                     | Create a course                                                          | Next                     |
+| `/admin/courses/:courseId/edit`                          | Edit course code and name                                                | Next                     |
+| `/admin/classes`                                         | List classes by course and term                                          | Next                     |
+| `/admin/classes/new`                                     | Create a class with its course, term, section, lecturer and map location | Built                    |
+| `/admin/classes/:classId`                                | View class details                                                       | Next                     |
+| `/admin/classes/:classId/edit`                           | Edit class details and the map location and radius                       | Built                    |
+| `/admin/classes/:classId/schedule`                       | List a class's sessions, filter by state, cancel a session               | Built                    |
+| `/admin/classes/:classId/schedule/new`                   | Schedule a class session                                                 | Built                    |
+| `/admin/class-sessions/:classSessionId`                  | View class session details, status and roster                            | Next                     |
+| `/admin/class-sessions/:classSessionId/edit`             | Edit a session subject to backend timing restrictions                    | Next                     |
+| `/admin/enrolments`                                      | Select a class to manage enrolments                                      | Core                     |
+| `/admin/enrolments/:classId`                             | View roster, add students and remove enrolments                          | Core                     |
+| `/admin/users/:userId/enrolments`                        | Inspect a student's class memberships                                    | Next                     |
+| `/admin/attendance`                                      | Institution-wide attendance overview                                     | Next                     |
+| `/admin/attendance/classes/:classId`                     | Class attendance summary and sessions                                    | Next                     |
+| `/admin/attendance/classes/:classId/students/:studentId` | Student attendance within a class                                        | Next                     |
+| `/admin/attendance/reports`                              | Filter and export attendance data                                        | Optional                 |
+| `/admin/profile`                                         | Own profile and account settings                                         | Next                     |
 
 Administrator attendance pages can reuse lecturer attendance components with administrator access rules. Session details and class-scoped student attendance are supporting destinations, not additional first-milestone requirements.
 
@@ -192,6 +192,12 @@ Each role has its own home page (feature `src/features/dashboard/`). The pages a
 | Admin    | `/admin/home`    | `admin-home`    |
 
 The admin home page (`AdminHomePage.vue`) greets the signed-in admin and links to Courses, Classes, Enrolments, Class attendance and Create account. The Courses and Classes cards show their totals, read from the existing `GET /courses` and `GET /classes` lists (one row per request, only `meta.total` is used). If the totals do not load, the page shows an error with **Try again**, and the shortcuts still work. With no courses and no classes it says nothing is set up yet.
+
+## Class location editor
+
+The class form (`/admin/classes/new` and `/admin/classes/:classId/edit`) sets where students can check in with a map, not only with typed numbers. A pin marks the classroom and a shaded circle shows the allowed radius. The admin can click the map, drag the pin, type the latitude and longitude, move the radius slider, or type the radius. All of them share the same three values (`latitude`, `longitude`, `radius_m`), so each change shows in all the others straight away. **Use my current location** places the pin at the admin's device location when the browser allows it. If the map tiles or the map library do not load, a message appears and the number inputs keep working. The same fields are saved with the existing class `POST` and `PATCH`.
+
+Files: `GeofencePicker.vue` (map, inputs, slider), `GeofenceMap.vue` (the map), `use-geofence-map.js` (map setup, events, cleanup) and `services/geofence.js` (range checks, rounding to 6 decimals). Leaflet loads only when the form opens. Map tiles come from OpenStreetMap, and the attribution stays on the map. A circle cannot tell floors or rooms apart, and phone GPS is often 5 to 20 m off, so the form suggests a radius of about 50 m or more for a building.
 
 ## Admin class attendance
 
