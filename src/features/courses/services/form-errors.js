@@ -16,6 +16,12 @@ const FRIENDLY = {
     message: 'The selected lecturer cannot be assigned.',
     fields: { lecturer_id: 'Select an active lecturer.' },
   },
+  CLASS_SESSION_EXISTS: {
+    message: 'This class already has a session that starts at this time.',
+    fields: {
+      starts_at: 'This class already has a session that starts at this time.',
+    },
+  },
   CLASS_HAS_SESSIONS: {
     message:
       'Course, term and section cannot change after class sessions have been scheduled.',

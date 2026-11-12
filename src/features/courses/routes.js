@@ -1,4 +1,3 @@
-const placeholder = () => import('../../shared/pages/FeaturePlaceholder.vue');
 const admin = { roles: ['admin'] };
 
 // Paths follow docs/PAGES_AND_ROUTES.md (administrator pages).
@@ -39,15 +38,17 @@ export default [
     component: () => import('./pages/AdminClassFormPage.vue'),
     meta: admin,
   },
-  // Placeholder until session scheduling (#17) replaces it; keep the name.
+  // Session list with cancel (#17). Paired with backend #19.
   {
     path: 'admin/classes/:classId(\\d+)/schedule',
     name: 'admin-class-schedule',
-    component: placeholder,
-    props: {
-      title: 'Class schedule',
-      description: 'Scheduling class sessions will be added in a later update.',
-    },
+    component: () => import('./pages/AdminClassSessionsPage.vue'),
+    meta: admin,
+  },
+  {
+    path: 'admin/classes/:classId(\\d+)/schedule/new',
+    name: 'admin-class-session-new',
+    component: () => import('./pages/AdminClassSessionFormPage.vue'),
     meta: admin,
   },
 ];

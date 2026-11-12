@@ -124,8 +124,8 @@ All routes require the admin role. Initial enrolment management assigns existing
 | `/admin/classes/new`                                     | Create a class with its course, term, section and lecturer        | Next                     |
 | `/admin/classes/:classId`                                | View class details                                                | Next                     |
 | `/admin/classes/:classId/edit`                           | Edit class details and supported location settings                | Next                     |
-| `/admin/classes/:classId/schedule`                       | Manage a class's scheduled sessions                               | Next                     |
-| `/admin/classes/:classId/class-sessions/new`             | Schedule a class session                                          | Next                     |
+| `/admin/classes/:classId/schedule`                       | List a class's sessions, filter by state, cancel a session        | Built                    |
+| `/admin/classes/:classId/schedule/new`                   | Schedule a class session                                          | Built                    |
 | `/admin/class-sessions/:classSessionId`                  | View class session details, status and roster                     | Next                     |
 | `/admin/class-sessions/:classSessionId/edit`             | Edit a session subject to backend timing restrictions             | Next                     |
 | `/admin/enrolments`                                      | Select a class to manage enrolments                               | Core                     |
@@ -192,6 +192,12 @@ Each role has its own home page (feature `src/features/dashboard/`). The pages a
 | Admin    | `/admin/home`    | `admin-home`    |
 
 The admin home page (`AdminHomePage.vue`) greets the signed-in admin and links to Courses, Classes, Enrolments, Class attendance and Create account. The Courses and Classes cards show their totals, read from the existing `GET /courses` and `GET /classes` lists (one row per request, only `meta.total` is used). If the totals do not load, the page shows an error with **Try again**, and the shortcuts still work. With no courses and no classes it says nothing is set up yet.
+
+## Admin class sessions
+
+From **Classes**, the **Schedule** button opens the sessions of one class (`admin-class-schedule`). The list shows each session's date and time window, the late time, the room and the attendance counts. The saved state (`scheduled` or `cancelled`) is shown apart from the time-based state (`upcoming`, `in progress`, `ended`). It can be filtered by state and is paged. **Cancel session** shows only for sessions that have not ended, and asks for confirmation first. The sessions API is in `backend/docs/api/attendance.md` (backend #19).
+
+**Schedule a session** (`admin-class-session-new`) has Start time, Late after and End time. The admin types them in Kuala Lumpur time (UTC+8); the page sends UTC. Late after and End time follow the start time (15 minutes and 2 hours) until the admin changes them, and a sentence under the form explains what the times mean for students. Messages show under the fields for wrong times, a duplicate start and an overlap with another session of the class, the lecturer or the room. The typed times stay when saving fails.
 
 ## Announcements
 

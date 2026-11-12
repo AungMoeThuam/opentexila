@@ -1,4 +1,5 @@
 import { api } from '../../../app-context';
+import { createClassSessionsService } from './class-sessions-service.js';
 import {
   createClassManagementService,
   createCoursesService,
@@ -9,3 +10,4 @@ import {
 export const coursesService = createCoursesService({ api });
 export const lecturersService = createLecturersService({ api });
 export const classManagementService = createClassManagementService({ api });
+export const classSessionsService = createClassSessionsService({ api });
