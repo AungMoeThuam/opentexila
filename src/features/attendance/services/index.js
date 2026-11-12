@@ -3,6 +3,8 @@ import { createClassSessionsService } from './class-sessions-service.js';
 import { createMockClassSessionsService } from './mock-class-sessions.js';
 import { createClassSessionRecordsService } from './class-session-records-service.js';
 import { createMockClassSessionRecordsService } from './mock-class-session-records.js';
+import { createAnalyticsService } from './analytics-service.js';
+import { createMockAnalyticsService } from './mock-analytics.js';
 
 export const classSessionsService = mockMode
   ? createMockClassSessionsService()
@@ -11,3 +13,7 @@ export const classSessionsService = mockMode
 export const classSessionRecordsService = mockMode
   ? createMockClassSessionRecordsService()
   : createClassSessionRecordsService({ api });
+
+export const analyticsService = mockMode
+  ? createMockAnalyticsService()
+  : createAnalyticsService({ api });

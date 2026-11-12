@@ -45,6 +45,7 @@ The following backend endpoints are **proposed, not implemented**. Paths are rel
 | `/student/attendance/history`                        | `GET /me/attendance-records`                                                                                              |
 | `/lecturer/attendance`                               | `GET /me/class-sessions` (assigned classes)                                                                               |
 | `/lecturer/class-sessions/:classSessionId`           | `GET /class-sessions/:classSessionId/records`                                                                             |
+| `/lecturer/analytics`                                | `GET /lecturer/attendance-analytics` (proposed)                                                                           |
 
 `GET /me/classes` can serve enrolled students and assigned lecturers using the authenticated user's role. `/me` always means the authenticated user, never a client-supplied user ID. Enrolment mutations are administrator-only in the initial scope. `DELETE /classes/:classId/enrolments/:studentId` removes an enrolment; existing attendance records remain because they reference `users.id` directly. Exact request bodies remain to be agreed before implementation.
 
