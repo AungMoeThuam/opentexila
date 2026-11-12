@@ -88,3 +88,63 @@ test('assigned classes navigation and route are lecturer-only', () => {
       );
   }
 });
+
+test('forced password change redirects protected pages to activate', async () => {
+  const auth = createAuth({
+    currentUser: async () => ({
+      ...profile,
+      must_change_password: true,
+    }),
+  });
+
+  const guard = createAccessGuard(auth);
+
+  assert.deepEqual(
+    await guard({
+      name: 'student-home',
+      fullPath: '/student/home',
+      meta: { requiresAuth: true },
+    }),
+    { name: 'activate' },
+  );
+});
+
+test('forced password change allows access to activate only', async () => {
+  const auth = createAuth({
+    currentUser: async () => ({
+      ...profile,
+      must_change_password: true,
+    }),
+  });
+
+  const guard = createAccessGuard(auth);
+
+  assert.equal(
+    await guard({
+      name: 'activate',
+      fullPath: '/activate',
+      meta: { requiresAuth: true },
+    }),
+    true,
+  );
+});
+
+test('forced password change also redirects public pages to activate', async () => {
+  const auth = createAuth({
+    currentUser: async () => ({
+      ...profile,
+      must_change_password: true,
+    }),
+  });
+
+  const guard = createAccessGuard(auth);
+
+  assert.deepEqual(
+    await guard({
+      name: 'style-guide',
+      fullPath: '/style-guide',
+      meta: {},
+    }),
+    { name: 'activate' },
+  );
+});
