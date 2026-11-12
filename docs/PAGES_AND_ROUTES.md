@@ -191,6 +191,8 @@ Each role has its own home page (feature `src/features/dashboard/`). The pages a
 | Lecturer | `/lecturer/home` | `lecturer-home` |
 | Admin    | `/admin/home`    | `admin-home`    |
 
+The admin home page (`AdminHomePage.vue`) greets the signed-in admin and links to Courses, Classes, Enrolments, Class attendance and Create account. The Courses and Classes cards show their totals, read from the existing `GET /courses` and `GET /classes` lists (one row per request, only `meta.total` is used). If the totals do not load, the page shows an error with **Try again**, and the shortcuts still work. With no courses and no classes it says nothing is set up yet.
+
 ## Announcements
 
 Feature folder: `src/features/announcements/`. A lecturer posts news to a class, and students of that class read, like and comment. The sidebar item **Announcements** (all three roles) opens one feed of the posts from every class the user may see, so there are no per-class announcement pages. API contract: `backend/docs/api/announcements.md`.
