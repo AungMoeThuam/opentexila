@@ -34,6 +34,12 @@ const navigation = [
     roles: ['lecturer'],
   },
   {
+    label: 'Analytics',
+    icon: 'chart',
+    to: '/lecturer/analytics',
+    roles: ['lecturer'],
+  },
+  {
     label: 'Class attendance',
     icon: 'check',
     to: '/attendance/classes',
