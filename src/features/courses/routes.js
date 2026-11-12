@@ -46,6 +46,12 @@ export default [
     meta: admin,
   },
   {
+    path: 'admin/classes/:classId(\\d+)/attendance-settings',
+    name: 'admin-class-attendance-settings',
+    component: () => import('./pages/AdminClassAttendanceSettingsPage.vue'),
+    meta: admin,
+  },
+  {
     path: 'admin/classes/:classId(\\d+)/schedule/new',
     name: 'admin-class-session-new',
     component: () => import('./pages/AdminClassSessionFormPage.vue'),

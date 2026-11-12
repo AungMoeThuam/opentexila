@@ -305,6 +305,14 @@ onBeforeUnmount(() => {
           }"
           >Schedule</RouterLink
         >
+        <RouterLink
+          class="btn btn-outline-primary"
+          :to="{
+            name: 'admin-class-attendance-settings',
+            params: { classId: original.id },
+          }"
+          >Attendance settings</RouterLink
+        >
       </div>
     </header>
 
