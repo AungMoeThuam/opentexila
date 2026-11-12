@@ -10,7 +10,7 @@ const props = defineProps({
   error: { type: Object, default: null },
   emptyMessage: {
     type: String,
-    default: 'No attendance data for these filters.',
+    default: 'No finalised class sessions in this range.',
   },
 });
 defineEmits(['retry']);

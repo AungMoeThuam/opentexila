@@ -11,6 +11,7 @@ import RequestState from '../../../shared/components/RequestState.vue';
 import { myClassesService } from '../../enrolments/services/index.js';
 import AnalyticsFilters from '../components/AnalyticsFilters.vue';
 import AtRiskStudentList from '../components/AtRiskStudentList.vue';
+import UnfinalisedSessionsCard from '../components/UnfinalisedSessionsCard.vue';
 import ChartSkeleton from '../components/charts/ChartSkeleton.vue';
 import { useAttendanceAnalytics } from '../composables/use-attendance-analytics.js';
 import { useAttendanceClassOptions } from '../composables/use-attendance-class-options.js';
@@ -46,6 +47,9 @@ const {
   load,
   retry,
   updateFilters,
+  finalisingId,
+  finaliseError,
+  finalise,
   dismissNotices,
   dispose,
 } = useAttendanceAnalytics({
@@ -128,8 +132,8 @@ onMounted(() => {
   <RequestState
     v-else-if="isEmpty"
     state="empty"
-    title="No attendance data"
-    message="No attendance data for these filters."
+    title="No finalised class sessions"
+    message="No finalised class sessions in this range. Sessions count here once a Lecturer finalises them."
   />
   <div v-else-if="data" :aria-busy="loading">
     <div
@@ -143,10 +147,19 @@ onMounted(() => {
       </button>
     </div>
 
+    <UnfinalisedSessionsCard
+      v-if="data.unfinalised.length"
+      :sessions="data.unfinalised"
+      :classes="data.byClass"
+      :finalising-id="finalisingId"
+      :error="finaliseError"
+      @finalise="finalise"
+    />
+
     <ul class="list-unstyled row g-3 mb-4" aria-label="Summary">
       <li class="col-12 col-md-4">
         <div class="ot-card h-100">
-          <p class="ot-eyebrow mb-1">Ended class sessions</p>
+          <p class="ot-eyebrow mb-1">Finalised class sessions</p>
           <p class="ot-page-title mb-0">{{ summary.sessions }}</p>
         </div>
       </li>

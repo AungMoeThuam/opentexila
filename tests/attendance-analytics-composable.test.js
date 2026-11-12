@@ -38,6 +38,12 @@ function fakeService(handler = async () => payload()) {
   const calls = [];
   return {
     calls,
+    finalised: [],
+    async finaliseClassSession(id) {
+      this.finalised.push(id);
+      if (this.finaliseError) throw this.finaliseError;
+      return { outcome: 'finalised', absentMarked: 2 };
+    },
     getAttendanceAnalytics(filters, options) {
       calls.push({ filters: { ...filters }, signal: options.signal });
       return handler(filters, options, calls.length);
@@ -218,4 +224,58 @@ test('dispose cancels the pending timer and the in-flight request', async (t) =>
   pending.resolve(payload());
   await running;
   assert.equal(analytics.data.value, null);
+});
+
+const withUnfinalised = (sessions) => {
+  const result = payload(0);
+  result.data.unfinalised = sessions;
+  result.data.summary.unfinalisedSessions = sessions.length;
+  return result;
+};
+
+test('a range with only unfinalised sessions is not reported as empty', async () => {
+  const service = fakeService(async () =>
+    withUnfinalised([{ classSessionId: 30, classId: 7, pendingCount: 2 }]),
+  );
+  const { analytics } = setup({ service });
+  await analytics.load();
+  assert.equal(analytics.isEmpty.value, false);
+  assert.equal(analytics.data.value.unfinalised.length, 1);
+});
+
+test('a response without the unfinalised list is accepted as having none', async () => {
+  const { analytics } = setup();
+  await analytics.load();
+  assert.deepEqual(analytics.data.value.unfinalised, []);
+});
+
+test('finalising calls the service, then reloads the analytics', async () => {
+  const { service, analytics } = setup();
+  await analytics.load();
+  await analytics.finalise(30);
+  assert.deepEqual(service.finalised, [30]);
+  assert.equal(service.calls.length, 2);
+  assert.equal(analytics.finalisingId.value, null);
+  assert.equal(analytics.finaliseError.value, null);
+});
+
+test('a finalise outcome other than finalised is explained, not hidden', async () => {
+  const { service, analytics } = setup();
+  service.finaliseClassSession = async () => ({
+    outcome: 'not_due',
+    absentMarked: 0,
+  });
+  await analytics.finalise(30);
+  assert.match(analytics.finaliseError.value, /not.*finalised|has not ended/i);
+});
+
+test('a finalise failure is reported and keeps the data on screen', async () => {
+  const { service, analytics } = setup();
+  await analytics.load();
+  service.finaliseError = new ApiError('Not allowed.', { status: 403 });
+  await analytics.finalise(30);
+  assert.equal(analytics.finaliseError.value, 'Not allowed.');
+  assert.equal(analytics.finalisingId.value, null);
+  assert.equal(analytics.data.value.summary.sessions, 12);
+  assert.equal(service.calls.length, 1);
 });

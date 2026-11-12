@@ -72,6 +72,12 @@ const STUDENTS = [
   { id: 28, name: 'Student Nine', patterns: { 3: 'PLLPPP' } },
 ];
 
+// Ended sessions a Lecturer has not finalised yet; they stay out of every count.
+const UNFINALISED = [
+  { classSessionId: 31, classId: 3, date: '2026-11-06', pendingCount: 4 },
+  { classSessionId: 32, classId: 2, date: '2026-11-12', pendingCount: 2 },
+];
+
 const STATUS = { P: 'present', L: 'late', A: 'absent' };
 const round1 = (value) => Math.round(value * 10) / 10;
 const rateOf = ({ present, late, absent }) =>
@@ -103,7 +109,24 @@ function classLabelOf(classId) {
 }
 
 export function createMockAnalyticsService({ delayMs = 0 } = {}) {
+  const finalised = new Set();
   return {
+    async finaliseClassSession(classSessionId) {
+      const target = UNFINALISED.find(
+        (u) => u.classSessionId === classSessionId,
+      );
+      if (!target) {
+        throw new ApiError('Class session not found.', {
+          status: 404,
+          code: 'NOT_FOUND',
+        });
+      }
+      if (finalised.has(classSessionId)) {
+        return { outcome: 'already_finalised', absentMarked: 0 };
+      }
+      finalised.add(classSessionId);
+      return { outcome: 'finalised', absentMarked: target.pendingCount };
+    },
     async getAttendanceAnalytics(filters, { signal } = {}) {
       if (delayMs) await new Promise((resolve) => setTimeout(resolve, delayMs));
       if (signal?.aborted) {
@@ -162,6 +185,22 @@ export function createMockAnalyticsService({ delayMs = 0 } = {}) {
             classLabelOf(a.classId).localeCompare(classLabelOf(b.classId)),
         );
 
+      const unfinalised = UNFINALISED.filter(
+        (u) =>
+          !finalised.has(u.classSessionId) &&
+          (!classId || u.classId === Number(classId)) &&
+          u.date >= from &&
+          u.date <= to,
+      ).map((u) => ({
+        ...u,
+        startsAt: `${u.date}T02:00:00.000Z`,
+        endsAt: `${u.date}T04:00:00.000Z`,
+      }));
+      // byClass labels every class that has a counted or unfinalised session.
+      for (const u of unfinalised) {
+        if (!byClass.has(u.classId)) byClass.set(u.classId, zeroCounts());
+      }
+
       const total = summary.present + summary.late + summary.absent;
       return {
         data: {
@@ -170,6 +209,7 @@ export function createMockAnalyticsService({ delayMs = 0 } = {}) {
             ...summary,
             attendanceRate: total ? rateOf(summary) : 0,
             atRiskCount: atRisk.length,
+            unfinalisedSessions: unfinalised.length,
           },
           trend: [...byDate.entries()]
             .sort(([a], [b]) => a.localeCompare(b))
@@ -188,10 +228,11 @@ export function createMockAnalyticsService({ delayMs = 0 } = {}) {
                 present: c.present,
                 late: c.late,
                 absent: c.absent,
-                attendanceRate: rateOf(c),
+                attendanceRate: c.present + c.late + c.absent ? rateOf(c) : 0,
               };
             }),
           atRisk,
+          unfinalised,
         },
         meta: { from, to, atRiskBelow },
       };

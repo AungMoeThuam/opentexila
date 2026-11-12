@@ -150,3 +150,59 @@ test('mock rejects an unknown class with a forbidden error', async () => {
     (error) => error.status === 403 && error.code === 'FORBIDDEN',
   );
 });
+
+test('real service finalises a class session with a POST', async () => {
+  const requests = [];
+  const service = createAnalyticsService({
+    api: {
+      async request(path, options) {
+        requests.push({ path, options });
+        return { data: { outcome: 'finalised', absent_marked: 2 } };
+      },
+    },
+  });
+  const result = await service.finaliseClassSession(30);
+  assert.equal(requests[0].path, '/class-sessions/30/finalise');
+  assert.equal(requests[0].options.method, 'POST');
+  assert.deepEqual(result, { outcome: 'finalised', absentMarked: 2 });
+});
+
+test('mock lists unfinalised sessions in range with their class labelled in byClass', async () => {
+  const { data } = await createMockAnalyticsService().getAttendanceAnalytics(
+    FILTERS,
+    {},
+  );
+  assert.ok(data.unfinalised.length > 0);
+  assert.equal(data.summary.unfinalisedSessions, data.unfinalised.length);
+  const classIds = new Set(data.byClass.map((row) => row.classId));
+  assert.ok(data.unfinalised.every((row) => classIds.has(row.classId)));
+  assert.ok(data.unfinalised.every((row) => row.pendingCount > 0));
+});
+
+test('mock unfinalised sessions respect the date range', async () => {
+  const { data } = await createMockAnalyticsService().getAttendanceAnalytics(
+    { ...FILTERS, from: '2025-01-01', to: '2025-01-31' },
+    {},
+  );
+  assert.deepEqual(data.unfinalised, []);
+  assert.equal(data.summary.unfinalisedSessions, 0);
+});
+
+test('mock finalising removes the session from the unfinalised list', async () => {
+  const service = createMockAnalyticsService();
+  const before = await service.getAttendanceAnalytics(FILTERS, {});
+  const target = before.data.unfinalised[0];
+  const outcome = await service.finaliseClassSession(target.classSessionId);
+  assert.equal(outcome.outcome, 'finalised');
+  const after = await service.getAttendanceAnalytics(FILTERS, {});
+  assert.equal(
+    after.data.unfinalised.some(
+      (row) => row.classSessionId === target.classSessionId,
+    ),
+    false,
+  );
+  assert.equal(
+    (await service.finaliseClassSession(target.classSessionId)).outcome,
+    'already_finalised',
+  );
+});

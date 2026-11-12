@@ -18,6 +18,11 @@ const isAnalyticsPayload = (payload) =>
   Array.isArray(payload.data.byClass) &&
   Array.isArray(payload.data.atRisk);
 
+const FINALISE_PROBLEMS = {
+  not_due: 'This class session has not ended yet, so it cannot be finalised.',
+  cancelled: 'This class session was cancelled, so it cannot be finalised.',
+};
+
 const FILTER_KEYS = ['from', 'to', 'atRiskBelow'];
 
 // A 422 names the invalid filters; show each message under its own field.
@@ -49,6 +54,8 @@ export function useAttendanceAnalytics({
   const data = ref(null);
   const loading = ref(false);
   const error = ref(null);
+  const finalisingId = ref(null);
+  const finaliseError = ref(null);
 
   const isEmpty = computed(() => {
     const result = data.value;
@@ -57,6 +64,7 @@ export function useAttendanceAnalytics({
       result.summary.sessions === 0 &&
       result.trend.length === 0 &&
       result.byClass.length === 0 &&
+      result.unfinalised.length === 0 &&
       result.atRisk.length === 0,
     );
   });
@@ -94,7 +102,10 @@ export function useAttendanceAnalytics({
           code: 'INVALID_RESPONSE',
         });
       }
-      data.value = payload.data;
+      data.value = {
+        ...payload.data,
+        unfinalised: payload.data.unfinalised ?? [],
+      };
       Object.assign(applied, requested);
     } catch (cause) {
       if (id !== requestId || cause?.name === 'AbortError') return;
@@ -124,6 +135,23 @@ export function useAttendanceAnalytics({
     requestId += 1;
   }
 
+  // Only the Lecturer's own sessions can be finalised; the server checks it.
+  async function finalise(classSessionId) {
+    finalisingId.value = classSessionId;
+    finaliseError.value = null;
+    try {
+      const result = await service.finaliseClassSession(classSessionId);
+      const problem = FINALISE_PROBLEMS[result?.outcome];
+      if (problem) finaliseError.value = problem;
+      else await load();
+    } catch (cause) {
+      finaliseError.value =
+        cause?.message ?? 'Could not finalise this session.';
+    } finally {
+      finalisingId.value = null;
+    }
+  }
+
   function dismissNotices() {
     notices.value = [];
   }
@@ -140,6 +168,9 @@ export function useAttendanceAnalytics({
     load,
     retry: load,
     updateFilters,
+    finalisingId,
+    finaliseError,
+    finalise,
     dismissNotices,
     dispose,
   };
