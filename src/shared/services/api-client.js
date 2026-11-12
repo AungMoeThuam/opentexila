@@ -137,7 +137,14 @@ export function createApiClient({
         },
       );
 
-      if (response.status === 401 && path !== '/auth/login') {
+      if (
+        response.status === 401 &&
+        path !== '/auth/login' &&
+        !(
+          path === '/auth/change-password' &&
+          error.code === 'INVALID_CREDENTIALS'
+        )
+      ) {
         clearAccessToken();
         resetCsrf();
         onUnauthorized();
@@ -200,9 +207,10 @@ export function createApiClient({
     async request(path, options = {}) {
       const method = (options.method ?? 'GET').toUpperCase();
 
-      const token = ['GET', 'HEAD', 'OPTIONS'].includes(method)
-        ? undefined
-        : await getCsrf();
+      const token =
+        options.csrf === false || ['GET', 'HEAD', 'OPTIONS'].includes(method)
+          ? undefined
+          : await getCsrf();
 
       if (options.signal?.aborted) {
         throw new DOMException('Request cancelled', 'AbortError');
