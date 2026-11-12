@@ -24,11 +24,14 @@ const props = defineProps({
   // Messages by field: { latitude, longitude, radius_m }.
   errors: { type: Object, default: () => ({}) },
   disabled: { type: Boolean, default: false },
+  // The test student of the check-in simulator, { lat, lng } or null.
+  probe: { type: Object, default: null },
 });
 const emit = defineEmits([
   'update:latitude',
   'update:longitude',
   'update:radius',
+  'probe',
 ]);
 
 const position = computed(() => toPosition(props.latitude, props.longitude));
@@ -84,7 +87,13 @@ function useMyLocation() {
 
 <template>
   <div>
-    <GeofenceMap :position="position" :radius="radiusMetres" @pick="pick" />
+    <GeofenceMap
+      :position="position"
+      :radius="radiusMetres"
+      :probe="probe"
+      @pick="pick"
+      @probe="emit('probe', $event)"
+    />
     <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
       <button
         type="button"

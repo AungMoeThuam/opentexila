@@ -25,6 +25,11 @@ export function useGeofenceMap({
   position,
   radius,
   onPick,
+  // An optional second marker, the "test student" of the check-in simulator.
+  // `probe()` gives its { lat, lng } or null, and `onProbe(point)` is called
+  // when the admin drops it. A dashed line joins it to the pin.
+  probe = () => null,
+  onProbe = () => {},
   onTilesFailed = () => {},
   onTilesOk = () => {},
   loadLeaflet = () => import('leaflet'),
@@ -36,6 +41,9 @@ export function useGeofenceMap({
   let pin = null;
   let circle = null;
   let circleDrawn = null; // the position the circle is centred on now
+  let probePin = null;
+  let probeLine = null;
+  let probeDrawn = null; // where the test student is now
   let observer = null;
   let stopWatch = null;
   let destroyed = false;
@@ -52,6 +60,7 @@ export function useGeofenceMap({
       circle = null;
       circleDrawn = null;
       drawn = null;
+      drawProbe();
       return;
     }
     const created = !pin;
@@ -104,6 +113,61 @@ export function useGeofenceMap({
     // dragged is already in view, so the map is left alone and never fights them.
     if (!map.getBounds().contains([next.lat, next.lng]))
       map.setView([next.lat, next.lng], created ? PLACED_ZOOM : map.getZoom());
+    drawProbe();
+  }
+
+  // The test student and its line to the pin. Like the pin, it is only moved
+  // when its position really changed, so dragging it cannot loop.
+  function drawProbe() {
+    if (!map) return;
+    const spot = probe();
+    if (!spot) {
+      probePin?.remove();
+      probeLine?.remove();
+      probePin = probeLine = probeDrawn = null;
+      return;
+    }
+    if (!probePin) {
+      probePin = L.marker([spot.lat, spot.lng], {
+        draggable: true,
+        keyboard: true,
+        // Above the pin, so the test student is the one grabbed when they overlap.
+        zIndexOffset: 1000,
+        title: 'Test student',
+        alt: 'Test student for the check-in simulator',
+        icon: L.divIcon({
+          className: 'ot-geofence-probe',
+          html: '<span></span>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        }),
+      }).addTo(map);
+      probePin.on('dragend', () => {
+        probeDrawn = pickedPosition(probePin.getLatLng());
+        onProbe(probeDrawn);
+      });
+    } else if (!samePosition(probeDrawn, spot)) {
+      probePin.setLatLng([spot.lat, spot.lng]);
+    }
+    probeDrawn = spot;
+    const center = position();
+    if (!center) {
+      probeLine?.remove();
+      probeLine = null;
+      return;
+    }
+    const ends = [
+      [center.lat, center.lng],
+      [spot.lat, spot.lng],
+    ];
+    if (!probeLine)
+      probeLine = L.polyline(ends, {
+        color: '#0b1f3a',
+        weight: 2,
+        dashArray: '6 6',
+        interactive: false,
+      }).addTo(map);
+    else probeLine.setLatLngs(ends);
   }
 
   async function init(element) {
@@ -131,7 +195,8 @@ export function useGeofenceMap({
     draw();
     stopWatch = watch(() => {
       const at = position();
-      return [at?.lat, at?.lng, radius()];
+      const spot = probe();
+      return [at?.lat, at?.lng, radius(), spot?.lat, spot?.lng];
     }, draw);
   }
 
@@ -140,11 +205,12 @@ export function useGeofenceMap({
     stopWatch?.();
     observer?.disconnect();
     pin?.off();
+    probePin?.off();
     map?.off();
     map?.remove();
-    map = pin = circle = observer = stopWatch = null;
+    map = pin = circle = probePin = probeLine = observer = stopWatch = null;
     circleDrawn = null;
-    drawn = null;
+    drawn = probeDrawn = null;
   }
 
   return { init, destroy };

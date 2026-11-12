@@ -18,7 +18,7 @@ import { useGeofenceMap } from '../src/features/courses/composables/use-geofence
 
 // A stand-in for Leaflet that records what the composable does with it.
 function fakeLeaflet({ inView = true } = {}) {
-  const log = { markers: [], circles: [], maps: [], setViews: [] };
+  const log = { markers: [], circles: [], lines: [], maps: [], setViews: [] };
   const handlers = (target) => {
     target.handlers = {};
     target.on = (name, fn) => {
@@ -81,6 +81,24 @@ function fakeLeaflet({ inView = true } = {}) {
       log.markers.push(pin);
       return pin;
     },
+    polyline(points, options) {
+      const line = {
+        points,
+        options,
+        removed: false,
+        setCalls: 0,
+        addTo: () => line,
+        setLatLngs(next) {
+          line.points = next;
+          line.setCalls += 1;
+        },
+        remove() {
+          line.removed = true;
+        },
+      };
+      log.lines.push(line);
+      return line;
+    },
     circle(latlng, options) {
       const circle = {
         latlng,
@@ -110,18 +128,22 @@ async function start(options = {}) {
   const { L, log } = fakeLeaflet(options.leaflet);
   const position = ref(options.position ?? null);
   const radius = ref(options.radius ?? null);
+  const probe = ref(options.probe ?? null);
+  const probes = [];
   const picks = [];
   const events = [];
   const geofence = useGeofenceMap({
     position: () => position.value,
     radius: () => radius.value,
     onPick: (picked) => picks.push(picked),
+    probe: () => probe.value,
+    onProbe: (picked) => probes.push(picked),
     onTilesFailed: () => events.push('failed'),
     onTilesOk: () => events.push('ok'),
     loadLeaflet: async () => ({ default: L }),
   });
   await geofence.init({});
-  return { geofence, position, radius, picks, events, log };
+  return { geofence, position, radius, probe, probes, picks, events, log };
 }
 
 test('coordinates must be finite numbers in range', () => {
@@ -369,6 +391,94 @@ test('destroy during loading leaves no map behind', async () => {
   release();
   await starting;
   assert.equal(log.maps.length, 0);
+});
+
+test('the test student is a second marker with a line to the pin', async () => {
+  const { geofence, log, probe, probes } = await start({
+    position: { lat: 3, lng: 101 },
+    radius: 50,
+    probe: { lat: 3.0002, lng: 101 },
+  });
+  assert.equal(log.markers.length, 2, 'the pin and the test student');
+  const student = log.markers[1];
+  assert.equal(student.options.draggable, true);
+  assert.equal(student.options.keyboard, true);
+  assert.equal(student.options.icon.className, 'ot-geofence-probe');
+  assert.ok(
+    student.options.zIndexOffset > 0,
+    'above the pin when they overlap',
+  );
+  assert.equal(log.lines.length, 1);
+  assert.deepEqual(log.lines[0].points, [
+    [3, 101],
+    [3.0002, 101],
+  ]);
+  // Dropping the student sends a rounded position up and nothing else moves.
+  student.latlng = [3.00012345678, 101.0001];
+  student.handlers.dragend();
+  assert.deepEqual(probes.at(-1), { lat: 3.000123, lng: 101.0001 });
+  assert.equal(log.markers[0].setCalls, 0, 'the classroom pin did not move');
+  // The page sends the same position back: the marker is not set again.
+  probe.value = { lat: 3.000123, lng: 101.0001 };
+  await nextTick();
+  assert.equal(student.setCalls, 0, 'no loop');
+  // A position from the distance box moves the marker and the line.
+  probe.value = { lat: 3.0005, lng: 101 };
+  await nextTick();
+  assert.deepEqual(student.latlng, [3.0005, 101]);
+  assert.deepEqual(log.lines[0].points[1], [3.0005, 101]);
+  geofence.destroy();
+});
+
+test('the line follows the pin, and the test student can be removed', async () => {
+  const { geofence, position, probe, log } = await start({
+    position: { lat: 3, lng: 101 },
+    radius: 50,
+    probe: { lat: 3.0002, lng: 101 },
+  });
+  position.value = { lat: 3.01, lng: 101.01 };
+  await nextTick();
+  assert.deepEqual(
+    log.lines[0].points[0],
+    [3.01, 101.01],
+    'the line starts at the pin',
+  );
+  probe.value = null;
+  await nextTick();
+  assert.equal(log.markers[1].removed, true);
+  assert.equal(log.lines[0].removed, true);
+  probe.value = { lat: 3.02, lng: 101.02 };
+  await nextTick();
+  assert.equal(log.markers.length, 3, 'a new marker is drawn when it returns');
+  geofence.destroy();
+});
+
+test('without a pin the test student has no line, and cleanup removes both', async () => {
+  const { geofence, position, log } = await start({
+    probe: { lat: 3, lng: 101 },
+  });
+  assert.equal(log.markers.length, 1, 'the test student alone');
+  assert.equal(log.lines.length, 0);
+  position.value = { lat: 3.001, lng: 101 };
+  await nextTick();
+  assert.equal(log.lines.length, 1);
+  geofence.destroy();
+  assert.equal(log.maps[0].removed, true);
+  assert.deepEqual(
+    log.markers[1].handlers,
+    {},
+    'the marker listeners are removed',
+  );
+});
+
+test('a map used without a test student draws none', async () => {
+  const { geofence, log } = await start({
+    position: { lat: 3, lng: 101 },
+    radius: 50,
+  });
+  assert.equal(log.markers.length, 1);
+  assert.equal(log.lines.length, 0);
+  geofence.destroy();
 });
 
 test('the circle follows the pin after every kind of move', async () => {

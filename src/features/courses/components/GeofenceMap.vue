@@ -10,8 +10,10 @@ const props = defineProps({
   position: { type: Object, default: null },
   // Radius in metres, or null.
   radius: { type: Number, default: null },
+  // The test student of the check-in simulator, { lat, lng } or null.
+  probe: { type: Object, default: null },
 });
-const emit = defineEmits(['pick']);
+const emit = defineEmits(['pick', 'probe']);
 
 const element = ref();
 const tilesFailed = ref(false);
@@ -21,6 +23,8 @@ const geofence = useGeofenceMap({
   position: () => props.position,
   radius: () => props.radius,
   onPick: (picked) => emit('pick', picked),
+  probe: () => props.probe,
+  onProbe: (picked) => emit('probe', picked),
   onTilesFailed: () => (tilesFailed.value = true),
   onTilesOk: () => (tilesFailed.value = false),
 });
@@ -84,6 +88,19 @@ onBeforeUnmount(geofence.destroy);
   border-radius: 50% 50% 50% 0;
   transform: rotate(-45deg);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+.ot-geofence-probe span {
+  display: block;
+  width: 24px;
+  height: 24px;
+  background: #0b1f3a;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+.ot-geofence-probe:focus-visible span {
+  outline: 3px solid #c8312b;
+  outline-offset: 2px;
 }
 .ot-geofence-pin:focus-visible span {
   outline: 3px solid #0b1f3a;

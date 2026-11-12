@@ -13,6 +13,7 @@ import RequestState from '../../../shared/components/RequestState.vue';
 import { notify } from '../../../shared/composables/notifications.js';
 import AttendancePolicyForm from '../components/AttendancePolicyForm.vue';
 import AttendancePolicyPreview from '../components/AttendancePolicyPreview.vue';
+import CheckInSimulator from '../components/CheckInSimulator.vue';
 import {
   changedPolicyFields,
   differsFromClass,
@@ -28,6 +29,11 @@ import {
   classManagementService,
   classSessionsService,
 } from '../services/index.js';
+import {
+  followProbe,
+  pointAtDistance,
+} from '../services/check-in-simulation.js';
+import { samePosition, toPosition, toRadius } from '../services/geofence.js';
 import { ADMIN_TIME_ZONE_LABEL } from '../services/zoned-time.js';
 
 const MAX_PAGES = 20;
@@ -40,6 +46,8 @@ const classInfo = ref(null);
 const sessions = ref([]); // upcoming, scheduled sessions of the class
 const selectedId = ref('');
 const values = reactive(policyFormValues(null));
+// The test student of the check-in simulator. Not saved anywhere.
+const probe = ref(null);
 const errors = ref({});
 const notice = ref(null); // { tone: 'error' | 'info', text }
 const loading = ref(false);
@@ -121,7 +129,37 @@ function choose(id) {
   errors.value = {};
   notice.value = null;
   Object.assign(values, policyFormValues(selected.value));
+  placeProbe();
 }
+
+// The test student starts inside the area, half way to the edge.
+function placeProbe() {
+  const center = toPosition(values.latitude, values.longitude);
+  const radius = toRadius(values.radius_m);
+  probe.value =
+    center && radius !== null ? pointAtDistance(center, radius / 2) : null;
+  lastCenter = center;
+}
+
+// The test student moves with the classroom pin and keeps its distance and
+// direction from it, whether the pin was dragged, the map was clicked, the
+// device location was used or the coordinates were typed. `lastCenter` is the
+// last usable pin position, so a half-typed coordinate does not lose track.
+let lastCenter = null;
+watch(
+  () => [values.latitude, values.longitude],
+  () => {
+    const next = toPosition(values.latitude, values.longitude);
+    if (!next) return;
+    if (lastCenter && !samePosition(lastCenter, next))
+      probe.value = followProbe({
+        previous: lastCenter,
+        next,
+        probe: probe.value,
+      });
+    lastCenter = next;
+  },
+);
 
 function pickSession() {
   router.replace({
@@ -353,12 +391,21 @@ onBeforeUnmount(() => {
           :errors="errors"
           :disabled="saving"
           :max-late="maxLate"
+          :probe="probe"
+          @probe="probe = $event"
           @update="update"
-        />
+        >
+          <template #aside>
+            <AttendancePolicyPreview :summary="summary" />
+            <CheckInSimulator
+              :session="selected"
+              :values="values"
+              :probe="probe"
+              @update:probe="probe = $event"
+            />
+          </template>
+        </AttendancePolicyForm>
 
-        <div class="mt-4">
-          <AttendancePolicyPreview :summary="summary" />
-        </div>
         <p
           v-if="differsFromClassDefaults"
           class="ot-meta mt-2 mb-0"
