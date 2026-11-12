@@ -9,7 +9,19 @@ const navigation = [
     to: '/lecturer/classes',
     roles: ['lecturer'],
   },
+  {
+    label: 'Announcements',
+    icon: 'bell',
+    to: '/lecturer/announcements',
+    roles: ['lecturer'],
+  },
   { label: 'My classes', icon: 'book', to: '/my-classes', roles: ['student'] },
+  {
+    label: 'Announcements',
+    icon: 'bell',
+    to: '/student/announcements',
+    roles: ['student'],
+  },
   { label: 'Courses', icon: 'book', to: '/admin/courses', roles: ['admin'] },
   { label: 'Classes', icon: 'folder', to: '/admin/classes', roles: ['admin'] },
   {
@@ -25,6 +37,12 @@ const navigation = [
     roles: ['admin'],
   },
   {
+    label: 'Announcements',
+    icon: 'bell',
+    to: '/admin/announcements',
+    roles: ['admin'],
+  },
+  {
     label: 'Attendance',
     icon: 'check',
     roles: ['student'],
@@ -37,6 +55,12 @@ const navigation = [
     label: 'Attendance',
     icon: 'check',
     to: '/lecturer/attendance',
+    roles: ['lecturer'],
+  },
+  {
+    label: 'Analytics',
+    icon: 'chart',
+    to: '/lecturer/analytics',
     roles: ['lecturer'],
   },
   {

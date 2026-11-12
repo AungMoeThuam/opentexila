@@ -53,6 +53,12 @@ export default [
     meta: { roles: ['lecturer'] },
   },
   {
+    path: 'lecturer/analytics',
+    name: 'lecturer-analytics',
+    component: () => import('./pages/LecturerAnalyticsPage.vue'),
+    meta: { roles: ['lecturer'] },
+  },
+  {
     path: 'lecturer/class-sessions/:classSessionId',
     name: 'lecturer-class-session-records',
     component: () => import('./pages/LecturerClassSessionRecordsPage.vue'),
