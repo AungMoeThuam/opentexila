@@ -191,6 +191,25 @@ Each role has its own home page (feature `src/features/dashboard/`). The pages a
 | Lecturer | `/lecturer/home` | `lecturer-home` |
 | Admin    | `/admin/home`    | `admin-home`    |
 
+## Announcements
+
+Feature folder: `src/features/announcements/`. A lecturer posts news to a class, and students of that class read, like and comment. The sidebar item **Announcements** (all three roles) opens one feed of the posts from every class the user may see, so there are no per-class announcement pages. API contract: `backend/docs/api/announcements.md`.
+
+The feed has search, a class filter, a category filter, sort (newest, oldest, most liked) and paging. Its filters live in the address, for example `/student/announcements?classId=1&category=exam&sort=oldest&page=2`, so a reload, a shared link or Back restores the same view. One page component serves the three feed routes, and one serves the three detail routes.
+
+| Route                                          | Route name                   | Role     | Page                        | Status                     |
+| ---------------------------------------------- | ---------------------------- | -------- | --------------------------- | -------------------------- |
+| `/student/announcements`                       | `student-announcements`      | Student  | Feed (all enrolled classes) | Built                      |
+| `/lecturer/announcements`                      | `lecturer-announcements`     | Lecturer | Feed (all taught classes)   | Built                      |
+| `/admin/announcements`                         | `admin-announcements`        | Admin    | Feed (all classes)          | Built                      |
+| `/lecturer/announcements/new`                  | `lecturer-announcement-new`  | Lecturer | Form: new announcement      | Placeholder (form issue)   |
+| `/lecturer/announcements/:announcementId/edit` | `lecturer-announcement-edit` | Lecturer | Form: edit announcement     | Placeholder (form issue)   |
+| `/student/announcements/:announcementId`       | `student-announcement`       | Student  | Detail, likes, comments     | Placeholder (detail issue) |
+| `/lecturer/announcements/:announcementId`      | `lecturer-announcement`      | Lecturer | Detail, likes, comments     | Placeholder (detail issue) |
+| `/admin/announcements/:announcementId`         | `admin-announcement`         | Admin    | Detail, likes, comments     | Placeholder (detail issue) |
+
+The lecturer's "New announcement" button opens `/lecturer/announcements/new`, with `?classId=` when the feed is filtered to one class.
+
 ## Existing scaffold versus planned routes
 
 The following table is a migration plan, not a claim that these changes are implemented.
