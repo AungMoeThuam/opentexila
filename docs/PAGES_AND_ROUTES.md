@@ -199,6 +199,14 @@ The class form (`/admin/classes/new` and `/admin/classes/:classId/edit`) sets wh
 
 Files: `GeofencePicker.vue` (map, inputs, slider), `GeofenceMap.vue` (the map), `use-geofence-map.js` (map setup, events, cleanup) and `services/geofence.js` (range checks, rounding to 6 decimals). Leaflet loads only when the form opens. Map tiles come from OpenStreetMap, and the attribution stays on the map. A circle cannot tell floors or rooms apart, and phone GPS is often 5 to 20 m off, so the form suggests a radius of about 50 m or more for a building.
 
+### Suggestions on the class form
+
+The term, section and room are still typed, but the form helps from the classes that already exist (no new endpoint; it reads `GET /classes`):
+
+- **Term and room** list the values already in use. A value typed with different case, spaces or dashes takes the existing spelling ("2026 s2" becomes "2026-S2", "en 402" becomes "EN402"), so one term or room is never saved under two spellings. A new value is accepted as typed.
+- **Section** shows the next free letter for the chosen course and term, with a button to use it, and warns early when the section is already taken. The server still rejects a duplicate.
+- **Room and location:** when the room is one that another class uses, a new class with no location yet copies that class's latitude, longitude and radius, and says which class they came from. If a location is already set, the form offers **Use that location** and does not replace it unasked. If several classes use the room, the newest one is the source. The admin can always move the pin.
+
 ## Admin class attendance
 
 The sidebar item **Class attendance** (`/attendance/classes`, route `class-attendance`) is a read-only view for admins. The admin chooses a class (kept in the address as `?classId=`, so a reload or Back returns to it) and sees its sessions: date and time window, late time, the time-based state, and the Present, Late, Absent and Pending counts. It uses `GET /classes/:classId/class-sessions` (backend #19). A session that has started has **View attendance**, which opens that session's read-only roster at `/attendance/class-sessions/:classSessionId` (route `admin-class-session-records`). The roster uses `GET /class-sessions/:classSessionId/records`, which already allows admins, and the same table, status filter and paging as the lecturer's roster. An ended session that still has pending students is marked as not finalised by the lecturer. Admins cannot change attendance here.
