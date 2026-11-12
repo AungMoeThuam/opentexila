@@ -232,16 +232,30 @@ onBeforeUnmount(() => {
                     <AvailabilityBadge :availability="session.availability" />
                   </p>
                 </div>
-                <button
-                  v-if="canCancel(session)"
-                  type="button"
-                  class="btn btn-outline-danger"
-                  :disabled="cancelling"
-                  :aria-label="`Cancel the session on ${windowOf(session).date}, ${windowOf(session).time}`"
-                  @click="askCancel(session)"
-                >
-                  Cancel session
-                </button>
+                <div class="d-flex flex-wrap gap-2">
+                  <RouterLink
+                    v-if="
+                      canCancel(session) && session.availability === 'upcoming'
+                    "
+                    class="btn btn-outline-primary"
+                    :to="{
+                      name: 'admin-class-attendance-settings',
+                      params: { classId },
+                      query: { sessionId: session.id },
+                    }"
+                    >Attendance settings</RouterLink
+                  >
+                  <button
+                    v-if="canCancel(session)"
+                    type="button"
+                    class="btn btn-outline-danger"
+                    :disabled="cancelling"
+                    :aria-label="`Cancel the session on ${windowOf(session).date}, ${windowOf(session).time}`"
+                    @click="askCancel(session)"
+                  >
+                    Cancel session
+                  </button>
+                </div>
               </div>
             </article>
           </li>

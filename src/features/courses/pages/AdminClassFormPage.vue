@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import RequestState from '../../../shared/components/RequestState.vue';
 import { notify } from '../../../shared/composables/notifications.js';
 import FormField from '../components/FormField.vue';
+import GeofencePicker from '../components/GeofencePicker.vue';
 import {
   classManagementService,
   coursesService,
@@ -11,13 +12,22 @@ import {
 } from '../services/index.js';
 import { listAll } from '../services/course-class-services.js';
 import {
-  MAX_RADIUS_M,
-  MIN_RADIUS_M,
   changedFields,
   classFormValues,
   validateClassForm,
 } from '../services/course-class-validation.js';
 import { formErrorsFrom } from '../services/form-errors.js';
+import { adminClassesService } from '../../enrolments/services/index.js';
+import {
+  canonicalValue,
+  distinctValues,
+  locationEmpty,
+  locationOf,
+  nextFreeSection,
+  roomSource,
+  sameLocationAs,
+  sectionTaken,
+} from '../services/class-suggestions.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -33,6 +43,12 @@ const loading = ref(false);
 const loadError = ref(null);
 const notFound = ref(false);
 const formElement = ref();
+// Classes that already exist. They only feed the suggestions, so the form works
+// without them.
+const existing = ref([]);
+const roomNote = ref(null); // { text, apply?: location to offer }
+let roomRequest = 0;
+const roomLocations = new Map(); // class id -> location, to ask once per class
 let controller;
 let active = true;
 
@@ -56,6 +72,29 @@ const lecturerOptions = computed(() => {
   ];
 });
 
+const currentId = computed(() => original.value?.id);
+const termOptions = computed(() =>
+  distinctValues(existing.value, 'term', { excludeId: currentId.value }),
+);
+const roomOptions = computed(() =>
+  distinctValues(existing.value, 'room_label', { excludeId: currentId.value }),
+);
+const suggestedSection = computed(() =>
+  nextFreeSection(existing.value, {
+    courseId: form.course_id,
+    term: form.term,
+    excludeId: currentId.value,
+  }),
+);
+const sectionExists = computed(() =>
+  sectionTaken(existing.value, {
+    courseId: form.course_id,
+    term: form.term,
+    section: form.section,
+    excludeId: currentId.value,
+  }),
+);
+
 async function loadPage() {
   controller?.abort();
   controller = new AbortController();
@@ -64,7 +103,7 @@ async function loadPage() {
   loadError.value = null;
   notFound.value = false;
   try {
-    const [courseRows, lecturerRows, detail] = await Promise.all([
+    const [courseRows, lecturerRows, detail, classRows] = await Promise.all([
       listAll((params, options) => coursesService.list(params, options), {
         signal,
       }),
@@ -74,10 +113,16 @@ async function loadPage() {
       editing.value
         ? classManagementService.get(route.params.classId, { signal })
         : null,
+      // Suggestions are optional, so a failure here is ignored.
+      listAll((params, options) => adminClassesService.list(params, options), {
+        signal,
+      }).catch(() => []),
     ]);
     if (signal.aborted) return;
     courses.value = courseRows;
     lecturers.value = lecturerRows;
+    existing.value = classRows;
+    roomNote.value = null;
     original.value = detail;
     Object.assign(form, classFormValues(detail));
     if (!detail) {
@@ -94,6 +139,65 @@ async function loadPage() {
   } finally {
     if (!signal.aborted) loading.value = false;
   }
+}
+
+// Writes a term or room the way an existing class spells it ("2026 s2" becomes
+// "2026-S2"), so one term or room is never saved under two spellings.
+function tidyTerm() {
+  form.term = canonicalValue(form.term, termOptions.value);
+}
+
+// A room another class already uses brings that class's location. A new class
+// with no location yet starts from it. If a location is already set, the admin
+// is asked before it is replaced.
+async function roomChanged() {
+  form.room_label = canonicalValue(form.room_label, roomOptions.value);
+  const source = roomSource(existing.value, form.room_label, {
+    excludeId: currentId.value,
+  });
+  const request = ++roomRequest;
+  if (!source) {
+    roomNote.value = null;
+    return;
+  }
+  try {
+    if (!roomLocations.has(source.id))
+      roomLocations.set(
+        source.id,
+        locationOf(await classManagementService.get(source.id)),
+      );
+    if (request !== roomRequest || !active) return;
+    const location = roomLocations.get(source.id);
+    const label = `${source.course?.code} section ${source.section} (${source.term})`;
+    if (locationEmpty(form)) {
+      Object.assign(form, location);
+      roomNote.value = {
+        text: `Location copied from ${label}, which also uses ${source.room_label}. Move the pin if this class is in a different spot.`,
+      };
+    } else if (!sameLocationAs(form, location)) {
+      roomNote.value = {
+        text: `${label} also uses ${source.room_label}, at a different location.`,
+        apply: location,
+      };
+    } else roomNote.value = null;
+  } catch {
+    if (request === roomRequest) roomNote.value = null;
+  }
+}
+
+// Picking a suggestion in the list fires `input` without typing.
+function roomInput(event) {
+  if (
+    event.inputType === undefined ||
+    event.inputType === 'insertReplacementText'
+  )
+    roomChanged();
+}
+
+function useRoomLocation() {
+  if (!roomNote.value?.apply) return;
+  Object.assign(form, roomNote.value.apply);
+  roomNote.value = null;
 }
 
 async function focusFirstError() {
@@ -201,6 +305,14 @@ onBeforeUnmount(() => {
           }"
           >Schedule</RouterLink
         >
+        <RouterLink
+          class="btn btn-outline-primary"
+          :to="{
+            name: 'admin-class-attendance-settings',
+            params: { classId: original.id },
+          }"
+          >Attendance settings</RouterLink
+        >
       </div>
     </header>
 
@@ -303,11 +415,20 @@ onBeforeUnmount(() => {
                   type="text"
                   maxlength="50"
                   autocomplete="off"
+                  list="class-term-options"
                   required
                   :disabled="saving || identityLocked"
                   :aria-invalid="field.invalid"
                   :aria-describedby="field.describedby"
+                  @change="tidyTerm"
                 />
+                <datalist id="class-term-options">
+                  <option
+                    v-for="option in termOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  ></option>
+                </datalist>
               </template>
             </FormField>
           </div>
@@ -337,6 +458,31 @@ onBeforeUnmount(() => {
                 />
               </template>
             </FormField>
+            <p
+              v-if="sectionExists && !identityLocked"
+              class="form-text text-danger mb-0"
+              data-test="section-taken"
+            >
+              This course already has this section in this term.
+            </p>
+            <p
+              v-else-if="
+                suggestedSection &&
+                !identityLocked &&
+                form.section !== suggestedSection
+              "
+              class="form-text mb-0"
+              data-test="section-suggestion"
+            >
+              Next free section:
+              <button
+                type="button"
+                class="btn btn-link p-0 align-baseline"
+                @click="form.section = suggestedSection"
+              >
+                {{ suggestedSection }}
+              </button>
+            </p>
           </div>
           <div class="col-12 col-lg-6">
             <FormField
@@ -407,94 +553,45 @@ onBeforeUnmount(() => {
                   type="text"
                   maxlength="100"
                   autocomplete="off"
+                  list="class-room-options"
                   required
                   :disabled="saving"
                   :aria-invalid="field.invalid"
                   :aria-describedby="field.describedby"
+                  @change="roomChanged"
+                  @input="roomInput"
                 />
+                <datalist id="class-room-options">
+                  <option
+                    v-for="option in roomOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  ></option>
+                </datalist>
               </template>
             </FormField>
           </div>
-          <div class="col-12 col-lg-6">
-            <FormField
-              id="class-radius"
-              label="Attendance radius (metres)"
-              required
-              :error="errors.radius_m"
-              :hint="`${MIN_RADIUS_M} to ${MAX_RADIUS_M} metres.`"
-            >
-              <template #default="field">
-                <input
-                  :id="field.id"
-                  v-model="form.radius_m"
-                  class="form-control"
-                  :class="{ 'is-invalid': field.invalid }"
-                  type="number"
-                  inputmode="decimal"
-                  :min="MIN_RADIUS_M"
-                  :max="MAX_RADIUS_M"
-                  step="any"
-                  required
-                  :disabled="saving"
-                  :aria-invalid="field.invalid"
-                  :aria-describedby="field.describedby"
-                />
-              </template>
-            </FormField>
+          <div v-if="roomNote" class="col-12">
+            <p class="ot-notice mb-0" role="status" data-test="room-note">
+              {{ roomNote.text }}
+              <button
+                v-if="roomNote.apply"
+                type="button"
+                class="btn btn-sm btn-outline-primary ms-2"
+                @click="useRoomLocation"
+              >
+                Use that location
+              </button>
+            </p>
           </div>
-          <div class="col-12 col-sm-6">
-            <FormField
-              id="class-latitude"
-              label="Latitude"
-              required
-              :error="errors.latitude"
-              hint="-90 to 90, e.g. -37.8221"
-            >
-              <template #default="field">
-                <input
-                  :id="field.id"
-                  v-model="form.latitude"
-                  class="form-control"
-                  :class="{ 'is-invalid': field.invalid }"
-                  type="number"
-                  inputmode="decimal"
-                  min="-90"
-                  max="90"
-                  step="any"
-                  required
-                  :disabled="saving"
-                  :aria-invalid="field.invalid"
-                  :aria-describedby="field.describedby"
-                />
-              </template>
-            </FormField>
-          </div>
-          <div class="col-12 col-sm-6">
-            <FormField
-              id="class-longitude"
-              label="Longitude"
-              required
-              :error="errors.longitude"
-              hint="-180 to 180, e.g. 145.0389"
-            >
-              <template #default="field">
-                <input
-                  :id="field.id"
-                  v-model="form.longitude"
-                  class="form-control"
-                  :class="{ 'is-invalid': field.invalid }"
-                  type="number"
-                  inputmode="decimal"
-                  min="-180"
-                  max="180"
-                  step="any"
-                  required
-                  :disabled="saving"
-                  :aria-invalid="field.invalid"
-                  :aria-describedby="field.describedby"
-                />
-              </template>
-            </FormField>
+          <div class="col-12">
+            <GeofencePicker
+              v-model:latitude="form.latitude"
+              v-model:longitude="form.longitude"
+              v-model:radius="form.radius_m"
+              :errors="errors"
+              :disabled="saving"
+            />
           </div>
         </div>
       </fieldset>

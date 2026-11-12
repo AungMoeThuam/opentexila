@@ -49,7 +49,7 @@ export function buildSessionsPath(classId, { page, limit, state } = {}) {
   return `/classes/${id}/class-sessions${string ? `?${string}` : ''}`;
 }
 
-// list, create and cancel, as in backend/docs/api/attendance.md. list resolves
+// list, create, cancel and updatePolicy, as in backend/docs/api/attendance.md. list resolves
 // to { data, meta, context: { class } }; create and cancel resolve to the session.
 export function createClassSessionsService({ api }) {
   return {
@@ -73,6 +73,16 @@ export function createClassSessionsService({ api }) {
         body,
         signal,
       });
+      return expectSession(payload?.data);
+    },
+    // Changes the venue and the late time of one session that has not started.
+    // `body` holds any of room_label, latitude, longitude, radius_m, late_after.
+    async updatePolicy(classSessionId, body, { signal } = {}) {
+      const id = positiveInteger(classSessionId, 'classSessionId', MAX_ID);
+      const payload = await api.request(
+        `/class-sessions/${id}/attendance-policy`,
+        { method: 'PATCH', body, signal },
+      );
       return expectSession(payload?.data);
     },
     async cancel(classSessionId, { signal } = {}) {
