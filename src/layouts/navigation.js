@@ -25,6 +25,12 @@ const navigation = [
   { label: 'Courses', icon: 'book', to: '/admin/courses', roles: ['admin'] },
   { label: 'Classes', icon: 'folder', to: '/admin/classes', roles: ['admin'] },
   {
+  label: 'Timetable',
+  icon: 'book',
+  to: '/admin/timetable',
+  roles: ['admin'],
+  },
+  {
     label: 'Enrolments',
     icon: 'users',
     to: '/admin/enrolments',
