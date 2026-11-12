@@ -193,6 +193,10 @@ Each role has its own home page (feature `src/features/dashboard/`). The pages a
 
 The admin home page (`AdminHomePage.vue`) greets the signed-in admin and links to Courses, Classes, Enrolments, Class attendance and Create account. The Courses and Classes cards show their totals, read from the existing `GET /courses` and `GET /classes` lists (one row per request, only `meta.total` is used). If the totals do not load, the page shows an error with **Try again**, and the shortcuts still work. With no courses and no classes it says nothing is set up yet.
 
+## Admin class attendance
+
+The sidebar item **Class attendance** (`/attendance/classes`, route `class-attendance`) is a read-only view for admins. The admin chooses a class (kept in the address as `?classId=`, so a reload or Back returns to it) and sees its sessions: date and time window, late time, the time-based state, and the Present, Late, Absent and Pending counts. It uses `GET /classes/:classId/class-sessions` (backend #19). A session that has started has **View attendance**, which opens that session's read-only roster at `/attendance/class-sessions/:classSessionId` (route `admin-class-session-records`). The roster uses `GET /class-sessions/:classSessionId/records`, which already allows admins, and the same table, status filter and paging as the lecturer's roster. An ended session that still has pending students is marked as not finalised by the lecturer. Admins cannot change attendance here.
+
 ## Admin class sessions
 
 From **Classes**, the **Schedule** button opens the sessions of one class (`admin-class-schedule`). The list shows each session's date and time window, the late time, the room and the attendance counts. The saved state (`scheduled` or `cancelled`) is shown apart from the time-based state (`upcoming`, `in progress`, `ended`). It can be filtered by state and is paged. **Cancel session** shows only for sessions that have not ended, and asks for confirmation first. The sessions API is in `backend/docs/api/attendance.md` (backend #19).
