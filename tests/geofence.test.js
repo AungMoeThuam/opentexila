@@ -290,6 +290,12 @@ test('a position the pin already has is not set again, so there is no loop', asy
   position.value = { lat: 3.0001, lng: 101.0002 };
   await nextTick();
   assert.equal(pin.setCalls, 0, 'the pin was not moved again');
+  // The circle was not moved by the drag itself, so it follows the pin now.
+  assert.deepEqual(
+    log.circles[0].latlng,
+    [3.0001, 101.0002],
+    'the circle follows a dragged pin',
+  );
   geofence.destroy();
 });
 
@@ -363,4 +369,41 @@ test('destroy during loading leaves no map behind', async () => {
   release();
   await starting;
   assert.equal(log.maps.length, 0);
+});
+
+test('the circle follows the pin after every kind of move', async () => {
+  const { geofence, position, log } = await start({
+    position: { lat: 3, lng: 101 },
+    radius: 50,
+  });
+  const pin = log.markers[0];
+  const circle = log.circles[0];
+  // Dragging the pin.
+  pin.latlng = [3.01, 101.01];
+  pin.handlers.dragend();
+  position.value = { lat: 3.01, lng: 101.01 };
+  await nextTick();
+  assert.deepEqual(circle.latlng, [3.01, 101.01]);
+  // A click on the map (the page moves the position).
+  log.maps[0].handlers.click({ latlng: { lat: 3.02, lng: 101.02 } });
+  position.value = { lat: 3.02, lng: 101.02 };
+  await nextTick();
+  assert.deepEqual(pin.latlng, [3.02, 101.02]);
+  assert.deepEqual(circle.latlng, [3.02, 101.02]);
+  // Typed coordinates.
+  position.value = { lat: 3.5, lng: 101.5 };
+  await nextTick();
+  assert.deepEqual(circle.latlng, [3.5, 101.5]);
+  // Dropping the pin twice in a row on new places.
+  for (const [lat, lng] of [
+    [4, 102],
+    [4.001, 102.001],
+  ]) {
+    pin.latlng = [lat, lng];
+    pin.handlers.dragend();
+    position.value = { lat, lng };
+    await nextTick();
+    assert.deepEqual(circle.latlng, [lat, lng]);
+  }
+  geofence.destroy();
 });

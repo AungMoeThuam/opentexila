@@ -35,6 +35,7 @@ export function useGeofenceMap({
   let map = null;
   let pin = null;
   let circle = null;
+  let circleDrawn = null; // the position the circle is centred on now
   let observer = null;
   let stopWatch = null;
   let destroyed = false;
@@ -49,6 +50,7 @@ export function useGeofenceMap({
       circle?.remove();
       pin = null;
       circle = null;
+      circleDrawn = null;
       drawn = null;
       return;
     }
@@ -82,8 +84,14 @@ export function useGeofenceMap({
         fillColor: '#c8312b',
         fillOpacity: 0.15,
       }).addTo(map);
+      circleDrawn = next;
     } else {
-      if (!samePosition(drawn, next)) circle.setLatLng([next.lat, next.lng]);
+      // The circle has its own position. The pin may already be at `next`
+      // (the admin just dropped it there), but the circle is not until now.
+      if (!samePosition(circleDrawn, next)) {
+        circle.setLatLng([next.lat, next.lng]);
+        circleDrawn = next;
+      }
       if (meters !== null && circle.getRadius() !== meters)
         circle.setRadius(meters);
     }
@@ -135,6 +143,7 @@ export function useGeofenceMap({
     map?.off();
     map?.remove();
     map = pin = circle = observer = stopWatch = null;
+    circleDrawn = null;
     drawn = null;
   }
 
