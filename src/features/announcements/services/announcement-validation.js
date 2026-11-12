@@ -4,6 +4,7 @@ import { CATEGORIES } from './announcement-options.js';
 
 export const MAX_TITLE = 150;
 export const MAX_BODY = 5000;
+export const MAX_COMMENT = 1000;
 const MAX_ID = 4294967295;
 
 const text = (value) => (typeof value === 'string' ? value.trim() : '');
@@ -59,4 +60,18 @@ export function changedAnnouncementFields(payload, original) {
 // Characters left for the counter under the body field. Negative when too long.
 export function charactersLeft(value, max = MAX_BODY) {
   return max - text(value).length;
+}
+
+// A comment is plain text of 1 to 1000 characters after trimming. Returns
+// { valid, error, body }, where `body` is the trimmed text to send.
+export function validateComment(value) {
+  const body = text(value);
+  if (!body) return { valid: false, error: 'Write a comment first.', body };
+  if (body.length > MAX_COMMENT)
+    return {
+      valid: false,
+      error: `Comment must be at most ${MAX_COMMENT} characters.`,
+      body,
+    };
+  return { valid: true, error: '', body };
 }
