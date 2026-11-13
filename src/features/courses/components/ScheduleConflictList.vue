@@ -3,6 +3,7 @@
 // when and where, with a link to that class's schedule.
 import { formatSessionWindow } from '../../../shared/utils/format-datetime.js';
 import { reasonText } from '../services/session-conflicts.js';
+import { scheduleLocation } from '../services/session-highlight.js';
 
 defineProps({
   conflicts: { type: Array, required: true },
@@ -38,10 +39,7 @@ const classText = (session) =>
         <RouterLink
           v-if="item.session.class?.id"
           class="ms-2"
-          :to="{
-            name: 'admin-class-schedule',
-            params: { classId: item.session.class.id },
-          }"
+          :to="scheduleLocation(item.session.class.id, item.session.id)"
           >Open schedule</RouterLink
         >
       </p>
