@@ -8,6 +8,7 @@ const filters = reactive({ courseId: '', term: '' });
 const {
   classes,
   courses,
+  terms,
   meta,
   loading,
   error,
@@ -54,13 +55,12 @@ onBeforeUnmount(dispose);
       </div>
       <div class="col-12 col-md-3">
         <label class="form-label" for="class-term">Term</label
-        ><input
-          id="class-term"
-          v-model="filters.term"
-          class="form-control"
-          maxlength="50"
-          placeholder="e.g. 2026-S2"
-        />
+        ><select id="class-term" v-model="filters.term" class="form-select">
+          <option value="">All terms</option>
+          <option v-for="term in terms" :key="term" :value="term">
+            {{ term }}
+          </option>
+        </select>
       </div>
       <div class="col-12 col-md-4 d-flex gap-2">
         <button class="btn btn-primary" :disabled="loading">
