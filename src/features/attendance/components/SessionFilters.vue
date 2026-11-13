@@ -1,5 +1,6 @@
 <script setup>
 import { useId } from 'vue';
+import { STATUS_OPTIONS } from '../services/session-status-filter.js';
 
 const props = defineProps({
   filters: { type: Object, required: true },
@@ -12,6 +13,7 @@ const emit = defineEmits(['apply', 'clear']);
 
 const uid = useId();
 const classFieldId = `${uid}-class`;
+const statusFieldId = `${uid}-status`;
 const fromFieldId = `${uid}-from`;
 const toFieldId = `${uid}-to`;
 const errorId = `${uid}-error`;
@@ -20,7 +22,7 @@ const errorId = `${uid}-error`;
 <template>
   <div class="ot-card mb-4">
     <form class="row g-3 align-items-end" @submit.prevent="emit('apply')">
-      <div class="col-12 col-md-4">
+      <div class="col-12 col-md-3">
         <label class="form-label" :for="classFieldId">Class</label>
         <select
           :id="classFieldId"
@@ -30,6 +32,23 @@ const errorId = `${uid}-error`;
           <option value="">All classes</option>
           <option
             v-for="option in props.classOptions"
+            :key="option.value"
+            :value="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-2">
+        <label class="form-label" :for="statusFieldId">Status</label>
+        <select
+          :id="statusFieldId"
+          v-model="props.filters.status"
+          class="form-select"
+        >
+          <option
+            v-for="option in STATUS_OPTIONS"
             :key="option.value"
             :value="option.value"
           >
@@ -64,7 +83,7 @@ const errorId = `${uid}-error`;
         />
       </div>
 
-      <div class="col-12 col-md-4 d-flex flex-wrap gap-2">
+      <div class="col-12 col-md-3 d-flex flex-wrap gap-2">
         <button type="submit" class="btn btn-primary" :disabled="loading">
           Apply filters
         </button>

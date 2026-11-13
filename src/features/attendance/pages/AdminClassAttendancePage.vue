@@ -215,8 +215,8 @@ onBeforeUnmount(() => {
                   class="ot-meta mb-0"
                   data-test="not-finalised"
                 >
-                  The lecturer has not finalised this session, so some students
-                  are still pending.
+                  The lecturer has not submitted the attendance record for this
+                  session, so some students are still pending.
                 </p>
               </div>
               <RouterLink

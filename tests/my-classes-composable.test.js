@@ -57,3 +57,35 @@ test('failed class requests can be retried', async () => {
   assert.equal(retry.error.value, null);
   assert.equal(retry.classes.value.length, 3);
 });
+
+test('the term choices come from all the classes, not only the page shown', async () => {
+  const state = useMyClasses({
+    service: createMockMyClassesService(),
+    limit: 1,
+  });
+  await state.load();
+  assert.ok(state.terms.value.length >= 1);
+  assert.deepEqual(
+    state.terms.value,
+    [...state.terms.value].sort((a, b) => a.localeCompare(b)),
+  );
+  assert.equal(new Set(state.terms.value).size, state.terms.value.length);
+  const before = [...state.terms.value];
+  await state.applyFilters({ term: before[0] });
+  assert.deepEqual(
+    state.terms.value,
+    before,
+    'a filter does not shrink the list',
+  );
+  state.dispose();
+});
+
+test('every term in the list is a term of at least one class', async () => {
+  const service = createMockMyClassesService();
+  const state = useMyClasses({ service, limit: 2 });
+  await state.load();
+  const all = await service.list({ page: 1, limit: 100 });
+  const classTerms = new Set(all.data.map((item) => item.term));
+  for (const term of state.terms.value) assert.ok(classTerms.has(term), term);
+  state.dispose();
+});
