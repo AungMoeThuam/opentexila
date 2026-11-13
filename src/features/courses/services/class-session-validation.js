@@ -2,10 +2,15 @@
 // "Admin session management"). The server checks everything again, and also
 // the conflicts that only it can see (duplicates and overlaps).
 import { formatTime } from '../../../shared/utils/format-datetime.js';
+import { MAX_LATE_MINUTES } from './late-allowance.js';
 import { ADMIN_TIME_ZONE, zonedInputToDate } from './zoned-time.js';
 
 export const DEFAULT_LATE_MINUTES = 15;
 export const DEFAULT_LENGTH_MINUTES = 120;
+
+const MINUTE = 60000;
+// How long after the start the late time is, in minutes.
+const lateOffset = (start, late) => (late.getTime() - start.getTime()) / MINUTE;
 
 const LABELS = {
   starts_at: 'Start time',
@@ -39,6 +44,8 @@ export function validateSessionForm(
     errors.late_after = 'The late time must not be before the start time.';
   else if (late && end && late.getTime() >= end.getTime() && !errors.ends_at)
     errors.late_after = 'The late time must be before the end time.';
+  else if (start && late && lateOffset(start, late) > MAX_LATE_MINUTES)
+    errors.late_after = `The late time must be at most ${MAX_LATE_MINUTES} minutes after the start time.`;
   const valid = Object.keys(errors).length === 0;
   return {
     valid,
@@ -64,6 +71,7 @@ export function sessionSummary(
   const end = zonedInputToDate(values.ends_at, timeZone);
   if (!start || !late || !end) return '';
   if (late < start || late >= end || end <= start) return '';
+  if (lateOffset(start, late) > MAX_LATE_MINUTES) return '';
   const time = (date) => formatTime(date.toISOString(), { timeZone });
   return `Check-in opens at ${time(start)} and closes at ${time(end)}. A check-in up to ${time(late)} is Present, and a later one is Late.`;
 }

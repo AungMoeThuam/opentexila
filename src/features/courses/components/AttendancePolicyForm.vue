@@ -56,7 +56,7 @@ const numberFrom = (event) => {
         label="Late allowance (minutes after the start)"
         required
         :error="errors.late_minutes"
-        :hint="`Whole minutes, 0 to ${maxLate}. A check-in up to this point is Present.`"
+        :hint="`Whole minutes, 0 to ${maxLate}. A check-in up to this point is Present, and a later one is Late.`"
       >
         <template #default="field">
           <input

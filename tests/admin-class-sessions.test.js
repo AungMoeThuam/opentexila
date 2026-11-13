@@ -15,6 +15,7 @@ import {
   createClassSessionsService,
 } from '../src/features/courses/services/class-sessions-service.js';
 import { formErrorsFrom } from '../src/features/courses/services/form-errors.js';
+import { MAX_LATE_MINUTES } from '../src/features/courses/services/late-allowance.js';
 import courseRoutes from '../src/features/courses/routes.js';
 import { ApiError } from '../src/shared/services/api-client.js';
 
@@ -107,6 +108,31 @@ test('text that is not a real date and time is rejected', () => {
     '2026-11-20T09:00:00Z',
   ])
     assert.equal(zonedInputToDate(bad), null, String(bad));
+});
+
+test('the late time is at most 30 minutes after the start', () => {
+  assert.equal(MAX_LATE_MINUTES, 30);
+  const at = (late) =>
+    validateSessionForm({ ...valid, late_after: late }, { now: NOW });
+  assert.equal(at('2026-11-20T09:30').valid, true);
+  const tooLate = at('2026-11-20T09:31');
+  assert.equal(tooLate.valid, false);
+  assert.deepEqual(Object.keys(tooLate.errors), ['late_after']);
+  assert.equal(
+    tooLate.errors.late_after,
+    'The late time must be at most 30 minutes after the start time.',
+  );
+  // Almost at the end of a 2 hour session was allowed before.
+  assert.equal(at('2026-11-20T10:53').valid, false);
+  // The summary does not describe times that cannot be saved.
+  assert.equal(
+    sessionSummary({ ...valid, late_after: '2026-11-20T09:31' }),
+    '',
+  );
+  assert.match(
+    sessionSummary({ ...valid, late_after: '2026-11-20T09:30' }),
+    /up to 09:30 is Present/,
+  );
 });
 
 test('late and end times can follow the start time', () => {
