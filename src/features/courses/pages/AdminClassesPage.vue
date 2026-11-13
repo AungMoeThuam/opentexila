@@ -1,29 +1,80 @@
 <script setup>
-import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import RequestState from '../../../shared/components/RequestState.vue';
 import ClassPagination from '../../enrolments/components/ClassPagination.vue';
 import { adminClassesService } from '../../enrolments/services/index.js';
 import { usePagedList } from '../composables/use-paged-list.js';
+import {
+  CLASS_PAGE_SIZE,
+  listFilterQuery,
+  parseId,
+  termChoices,
+} from '../services/class-list-query.js';
 import { listAll } from '../services/course-class-services.js';
 import { coursesService } from '../services/index.js';
 
 const route = useRoute();
 const router = useRouter();
-const initialCourse = /^[1-9]\d*$/.test(String(route.query.courseId ?? ''))
-  ? Number(route.query.courseId)
-  : '';
-const filters = reactive({ courseId: initialCourse, term: '' });
-const applied = ref({ ...(initialCourse ? { courseId: initialCourse } : {}) });
-const termError = ref('');
+// The filters live in the address (?courseId=3&term=2026-S2), so the class form
+// can send the admin back to the list as it was.
+const initial = listFilterQuery(route.query);
+const filters = reactive({
+  courseId: initial.courseId ? Number(initial.courseId) : '',
+  term: initial.term ?? '',
+});
+const appliedFrom = (values) => ({
+  ...(values.courseId ? { courseId: Number(values.courseId) } : {}),
+  ...(values.term ? { term: values.term } : {}),
+});
+const applied = ref(appliedFrom(filters));
 const courses = ref([]);
 const coursesError = ref('');
 let coursesController;
+
+// Every class, only to know which terms exist for the Term list.
+const allClasses = ref([]);
+const termList = computed(() =>
+  termChoices(allClasses.value, { current: filters.term }),
+);
+
+// The filters to hand on to the class form, so Cancel and Save come back to
+// the list as it is.
+// The Edit link also carries the page, so a save comes back to the same page.
+const filterQuery = computed(() => ({
+  ...listFilterQuery(applied.value),
+  ...(page.value > 1 ? { page: String(page.value) } : {}),
+}));
+const newClassQuery = computed(() => listFilterQuery(applied.value));
+const appliedSummary = computed(() => {
+  const parts = [];
+  if (applied.value.courseId) {
+    const course = courses.value.find(
+      (item) => item.id === applied.value.courseId,
+    );
+    parts.push(course ? course.code : `course ${applied.value.courseId}`);
+  }
+  if (applied.value.term) parts.push(`term ${applied.value.term}`);
+  return parts.join(' · ');
+});
+
+// A class to scroll to and mark, for example the one that was just saved.
+const highlightId = ref(parseId(route.query.highlight));
+let scrolledTo = null;
 
 // Reuses GET /classes from the enrolments feature (backend #7).
 const {
   rows: classes,
   meta,
+  page,
   loading,
   error,
   load,
@@ -32,7 +83,7 @@ const {
   cancel,
 } = usePagedList(
   (params, options) => adminClassesService.list(params, options),
-  { filters: () => applied.value },
+  { limit: CLASS_PAGE_SIZE, filters: () => applied.value },
 );
 
 async function loadCourses() {
@@ -49,37 +100,64 @@ async function loadCourses() {
   }
 }
 
-function applyFilters() {
-  const term = filters.term.trim();
-  if (term.length > 50) {
-    termError.value = 'Term must be 50 characters or fewer.';
-    return;
+async function loadTerms() {
+  try {
+    allClasses.value = await listAll(
+      (params, options) => adminClassesService.list(params, options),
+      { signal: coursesController.signal },
+    );
+  } catch {
+    // The Term list then shows only the term that is chosen.
   }
-  termError.value = '';
-  applied.value = {
-    ...(filters.courseId ? { courseId: Number(filters.courseId) } : {}),
-    ...(term ? { term } : {}),
-  };
-  router.replace({
-    query: filters.courseId ? { courseId: filters.courseId } : {},
-  });
+}
+
+function applyFilters() {
+  applied.value = appliedFrom(filters);
+  highlightId.value = null;
+  router.replace({ query: listFilterQuery(applied.value) });
   reload();
 }
 function clearFilters() {
   filters.courseId = '';
   filters.term = '';
-  termError.value = '';
   applied.value = {};
+  highlightId.value = null;
   router.replace({ query: {} });
   reload();
 }
 
+// Scroll to the highlighted class once the list has it, then take the
+// highlight out of the address so a reload does not scroll again.
+watch([classes, highlightId], async () => {
+  const id = highlightId.value;
+  if (!id || scrolledTo === id || !classes.value.some((item) => item.id === id))
+    return;
+  scrolledTo = id;
+  await nextTick();
+  const card = document.getElementById(`class-${id}`);
+  if (!card) return;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  card.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' });
+  card.focus({ preventScroll: true });
+  const { highlight: _highlight, page: _page, ...rest } = route.query;
+  router.replace({ query: rest });
+});
+
 watch(error, (cause) => {
   if (cause?.status === 403) router.replace({ name: 'forbidden' });
 });
-onMounted(() => {
-  load();
+onMounted(async () => {
   loadCourses();
+  loadTerms();
+  // The class form can open the list on the page that holds the class it saved.
+  const startPage = parseId(route.query.page);
+  if (startPage) page.value = startPage;
+  await load();
+  // A page past the end (classes were removed meanwhile): show the last page.
+  const pages = meta.value?.totalPages;
+  if (pages && !classes.value.length && page.value > pages) {
+    await setPage(pages);
+  }
 });
 onBeforeUnmount(() => {
   cancel();
@@ -97,7 +175,9 @@ onBeforeUnmount(() => {
           Create class offerings, assign lecturers and set attendance locations.
         </p>
       </div>
-      <RouterLink class="btn btn-primary" :to="{ name: 'admin-class-new' }"
+      <RouterLink
+        class="btn btn-primary"
+        :to="{ name: 'admin-class-new', query: newClassQuery }"
         >New class</RouterLink
       >
     </header>
@@ -131,20 +211,16 @@ onBeforeUnmount(() => {
         </div>
         <div class="col-12 col-md-3">
           <label class="form-label" for="class-filter-term">Term</label>
-          <input
+          <select
             id="class-filter-term"
             v-model="filters.term"
-            class="form-control"
-            :class="{ 'is-invalid': termError }"
-            type="text"
-            maxlength="50"
-            placeholder="e.g. 2026-S2"
-            :aria-invalid="Boolean(termError)"
-            aria-describedby="class-filter-term-error"
-          />
-          <div id="class-filter-term-error" class="invalid-feedback">
-            {{ termError }}
-          </div>
+            class="form-select"
+          >
+            <option value="">All terms</option>
+            <option v-for="term in termList" :key="term" :value="term">
+              {{ term }}
+            </option>
+          </select>
         </div>
         <div class="col-12 col-md-4 d-flex flex-wrap gap-2">
           <button type="submit" class="btn btn-primary" :disabled="loading">
@@ -161,6 +237,22 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </form>
+
+    <p
+      v-if="appliedSummary"
+      class="ot-meta d-flex flex-wrap align-items-center gap-2 mb-4"
+      data-test="applied-filters"
+    >
+      <span>Showing only {{ appliedSummary }}.</span>
+      <button
+        type="button"
+        class="btn btn-link btn-sm p-0"
+        :disabled="loading"
+        @click="clearFilters"
+      >
+        Clear filters
+      </button>
+    </p>
 
     <RequestState
       v-if="loading && !classes.length"
@@ -194,7 +286,19 @@ onBeforeUnmount(() => {
           :key="cls.id"
           class="col-12 col-md-6 col-xl-4"
         >
-          <article class="ot-card h-100 d-flex flex-column">
+          <article
+            :id="`class-${cls.id}`"
+            class="ot-card h-100 d-flex flex-column"
+            :class="{ 'class-highlight': cls.id === highlightId }"
+            tabindex="-1"
+          >
+            <p
+              v-if="cls.id === highlightId"
+              class="ot-status ot-status--present align-self-start mb-2"
+              data-test="saved-note"
+            >
+              Saved just now
+            </p>
             <p class="ot-eyebrow">{{ cls.course?.code }}</p>
             <h2 class="ot-section-title">{{ cls.course?.name }}</h2>
             <dl class="row mt-3 mb-4">
@@ -210,7 +314,11 @@ onBeforeUnmount(() => {
             <div class="ot-class-actions mt-auto">
               <RouterLink
                 class="btn btn-primary"
-                :to="{ name: 'admin-class-edit', params: { classId: cls.id } }"
+                :to="{
+                  name: 'admin-class-edit',
+                  params: { classId: cls.id },
+                  query: filterQuery,
+                }"
                 :aria-label="`Edit ${cls.course?.code} section ${cls.section}, ${cls.term}`"
                 >Edit</RouterLink
               >
@@ -258,5 +366,10 @@ onBeforeUnmount(() => {
 .ot-class-actions :deep(.btn) {
   padding-inline: 0.5rem;
   white-space: nowrap;
+}
+.class-highlight {
+  border-color: var(--ot-success);
+  box-shadow: 0 0 0 3px var(--ot-success);
+  background: var(--ot-success-bg);
 }
 </style>
