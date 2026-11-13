@@ -1,5 +1,12 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import ConfirmDialog from '../../../shared/components/ConfirmDialog.vue';
 import RequestState from '../../../shared/components/RequestState.vue';
@@ -12,6 +19,10 @@ import AvailabilityBadge from '../../attendance/components/AvailabilityBadge.vue
 import ClassPagination from '../../enrolments/components/ClassPagination.vue';
 import { usePagedList } from '../composables/use-paged-list.js';
 import { classSessionsService } from '../services/index.js';
+import {
+  parseHighlightId,
+  sessionAnchor,
+} from '../services/session-highlight.js';
 import { ADMIN_TIME_ZONE_LABEL } from '../services/zoned-time.js';
 
 const route = useRoute();
@@ -44,6 +55,34 @@ const {
 );
 
 const notFound = computed(() => error.value?.status === 404);
+
+// The session the address points at, shown with a highlight. It is the
+// session that overlaps the one the admin was scheduling.
+const highlightId = computed(() => parseHighlightId(route.query.session));
+const highlightFound = computed(
+  () =>
+    highlightId.value !== null &&
+    sessions.value.some((session) => session.id === highlightId.value),
+);
+const highlightMissing = computed(
+  () =>
+    highlightId.value !== null &&
+    !loading.value &&
+    !error.value &&
+    sessions.value.length > 0 &&
+    !highlightFound.value,
+);
+let scrolledTo = null;
+watch([sessions, highlightId], async () => {
+  if (!highlightFound.value || scrolledTo === highlightId.value) return;
+  scrolledTo = highlightId.value;
+  await nextTick();
+  const row = document.getElementById(sessionAnchor(highlightId.value));
+  if (!row) return;
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  row.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'center' });
+  row.focus({ preventScroll: true });
+});
 const heading = computed(() =>
   context.value
     ? `${context.value.course?.code} · Section ${context.value.section} · ${context.value.term}`
@@ -201,9 +240,31 @@ onBeforeUnmount(() => {
         "
       />
       <section v-else :aria-busy="loading" aria-label="Class sessions">
+        <p
+          v-if="highlightMissing"
+          class="ot-notice mb-3"
+          role="status"
+          data-test="highlight-missing"
+        >
+          The overlapping session is not on this page. Use the page buttons or
+          the filter to find it.
+        </p>
         <ul class="list-unstyled d-grid gap-3 mb-0">
           <li v-for="session in sessions" :key="session.id">
-            <article class="ot-card" data-test="session">
+            <article
+              :id="sessionAnchor(session.id)"
+              class="ot-card"
+              :class="{ 'session-highlight': session.id === highlightId }"
+              tabindex="-1"
+              data-test="session"
+            >
+              <p
+                v-if="session.id === highlightId"
+                class="ot-status ot-status--late mb-3"
+                data-test="highlight-note"
+              >
+                Overlaps the session you were scheduling
+              </p>
               <div
                 class="d-flex flex-wrap align-items-start justify-content-between gap-3"
               >
@@ -283,3 +344,11 @@ onBeforeUnmount(() => {
     />
   </div>
 </template>
+
+<style scoped>
+.session-highlight {
+  border-color: var(--ot-warning);
+  box-shadow: 0 0 0 3px var(--ot-warning);
+  background: var(--ot-warning-bg);
+}
+</style>

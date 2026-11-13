@@ -11,6 +11,7 @@ import {
 import { useRoute, useRouter } from 'vue-router';
 import RequestState from '../../../shared/components/RequestState.vue';
 import { notify } from '../../../shared/composables/notifications.js';
+import DateTimeField from '../components/DateTimeField.vue';
 import FormField from '../components/FormField.vue';
 import ScheduleConflictList from '../components/ScheduleConflictList.vue';
 import { useSessionConflicts } from '../composables/use-session-conflicts.js';
@@ -215,8 +216,8 @@ onBeforeUnmount(() => {
         {{ notice.text }}
       </p>
       <p class="ot-meta">
-        Type the times in {{ ADMIN_TIME_ZONE_LABEL }}. They are saved as UTC.
-        The session uses the venue of the class
+        Choose each date and time in {{ ADMIN_TIME_ZONE_LABEL }}, on a 24-hour
+        clock. They are saved as UTC. The session uses the venue of the class
         <template v-if="classInfo"
           >({{ classInfo.room_label }}, {{ classInfo.radius_m }} m
           radius)</template
@@ -233,16 +234,13 @@ onBeforeUnmount(() => {
             hint="Students can check in from this time."
           >
             <template #default="field">
-              <input
+              <DateTimeField
                 :id="field.id"
                 v-model="form.starts_at"
-                class="form-control"
-                :class="{ 'is-invalid': field.invalid }"
-                type="datetime-local"
-                required
+                label="Start time"
+                :invalid="field.invalid"
                 :disabled="saving"
-                :aria-invalid="field.invalid"
-                :aria-describedby="field.describedby"
+                :describedby="field.describedby"
                 @change="startChanged"
               />
             </template>
@@ -257,17 +255,14 @@ onBeforeUnmount(() => {
             :hint="`A check-in up to this time is Present. At most ${MAX_LATE_MINUTES} minutes after the start.`"
           >
             <template #default="field">
-              <input
+              <DateTimeField
                 :id="field.id"
                 v-model="form.late_after"
-                class="form-control"
-                :class="{ 'is-invalid': field.invalid }"
-                type="datetime-local"
-                required
+                label="Late after"
+                :invalid="field.invalid"
                 :disabled="saving"
-                :aria-invalid="field.invalid"
-                :aria-describedby="field.describedby"
-                @input="touched.late_after = true"
+                :describedby="field.describedby"
+                @change="touched.late_after = true"
               />
             </template>
           </FormField>
@@ -281,17 +276,14 @@ onBeforeUnmount(() => {
             hint="Check-in closes at this time."
           >
             <template #default="field">
-              <input
+              <DateTimeField
                 :id="field.id"
                 v-model="form.ends_at"
-                class="form-control"
-                :class="{ 'is-invalid': field.invalid }"
-                type="datetime-local"
-                required
+                label="End time"
+                :invalid="field.invalid"
                 :disabled="saving"
-                :aria-invalid="field.invalid"
-                :aria-describedby="field.describedby"
-                @input="touched.ends_at = true"
+                :describedby="field.describedby"
+                @change="touched.ends_at = true"
               />
             </template>
           </FormField>
