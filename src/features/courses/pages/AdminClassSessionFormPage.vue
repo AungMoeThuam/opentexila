@@ -21,6 +21,7 @@ import {
   validateSessionForm,
 } from '../services/class-session-validation.js';
 import { formErrorsFrom } from '../services/form-errors.js';
+import { MAX_LATE_MINUTES } from '../services/late-allowance.js';
 import {
   classManagementService,
   classSessionsService,
@@ -253,7 +254,7 @@ onBeforeUnmount(() => {
             label="Late after"
             required
             :error="errors.late_after"
-            hint="A check-in up to this time is Present."
+            :hint="`A check-in up to this time is Present. At most ${MAX_LATE_MINUTES} minutes after the start.`"
           >
             <template #default="field">
               <input

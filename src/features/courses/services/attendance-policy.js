@@ -8,6 +8,7 @@ import {
 } from '../../../shared/utils/format-datetime.js';
 import { MAX_RADIUS_M, MIN_RADIUS_M } from './course-class-validation.js';
 import { toLatitude, toLongitude, toRadius } from './geofence.js';
+import { MAX_LATE_MINUTES } from './late-allowance.js';
 import { ADMIN_TIME_ZONE } from './zoned-time.js';
 
 const MINUTE = 60000;
@@ -36,10 +37,28 @@ export function lateMinutesOf(session) {
 
 // The longest allowance that is still before the end of the session, in whole
 // minutes (the late time must be before the end).
-export function maxLateMinutes(session) {
+export function sessionLateLimit(session) {
   const length =
     (Date.parse(session.ends_at) - Date.parse(session.starts_at)) / MINUTE;
-  return Number.isFinite(length) ? Math.ceil(length) - 1 : 0;
+  return Number.isFinite(length) ? Math.max(0, Math.ceil(length) - 1) : 0;
+}
+
+// The longest allowance an admin may set for this session: the app's limit, or
+// less when the session is short.
+export function maxLateMinutes(session) {
+  return Math.min(MAX_LATE_MINUTES, sessionLateLimit(session));
+}
+
+// The message for a late allowance that is longer than this session allows, or
+// '' when it is not too long (or is not a number yet). It is also shown while
+// the admin types, so a long value is seen at once and not only when saving.
+export function lateTooLongMessage(minutes, session) {
+  const limit = session ? maxLateMinutes(session) : 0;
+  const value = minutes === '' || minutes == null ? NaN : Number(minutes);
+  if (!session || !Number.isInteger(value) || value <= limit) return '';
+  return limit < MAX_LATE_MINUTES
+    ? `Late allowance must be at most ${limit} minutes, so the late time is before the session ends.`
+    : `Late allowance must be at most ${limit} minutes.`;
 }
 
 // The absolute late time for a start time and an allowance in minutes.
@@ -99,7 +118,7 @@ export function validatePolicy(values = {}, session) {
     errors.late_minutes =
       'Late allowance must be a whole number of minutes, 0 or more.';
   else if (session && minutes > limit)
-    errors.late_minutes = `Late allowance must be at most ${limit} minutes, so the late time is before the session ends.`;
+    errors.late_minutes = lateTooLongMessage(minutes, session);
 
   const valid = Object.keys(errors).length === 0;
   return {

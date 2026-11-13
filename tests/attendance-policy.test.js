@@ -6,14 +6,17 @@ import {
   isEditable,
   lateAfterFrom,
   lateMinutesOf,
+  lateTooLongMessage,
   maxLateMinutes,
   policyFormValues,
+  sessionLateLimit,
   policySummary,
   sessionOptionLabel,
   validatePolicy,
 } from '../src/features/courses/services/attendance-policy.js';
 import { createClassSessionsService } from '../src/features/courses/services/class-sessions-service.js';
 import courseRoutes from '../src/features/courses/routes.js';
+import { MAX_LATE_MINUTES } from '../src/features/courses/services/late-allowance.js';
 
 // 09:00 to 11:00 in Kuala Lumpur (01:00Z to 03:00Z), late after 09:15.
 const session = {
@@ -79,28 +82,74 @@ test('minutes become an exact late time, and back', () => {
     );
 });
 
-test('the late allowance stays before the end of the session', () => {
-  assert.equal(
-    maxLateMinutes(session),
-    119,
-    'a 120 minute session allows up to 119',
-  );
+test('the late allowance is at most 30 minutes and before the session ends', () => {
+  assert.equal(MAX_LATE_MINUTES, 30);
+  // A 120 minute session could allow 119; the app's limit is lower.
+  assert.equal(sessionLateLimit(session), 119);
+  assert.equal(maxLateMinutes(session), 30);
+  // A short session is limited by its own length.
+  const short = { ...session, ends_at: '2026-11-20T01:20:00.000Z' };
+  assert.equal(maxLateMinutes(short), 19);
   assert.equal(
     maxLateMinutes({ ...session, ends_at: '2026-11-20T01:00:30.000Z' }),
     0,
   );
   assert.equal(maxLateMinutes({ ...session, ends_at: 'bad' }), 0);
+  assert.equal(sessionLateLimit({ ...session, ends_at: 'bad' }), 0);
+});
+
+test('a late allowance up to the limit is accepted, and no more', () => {
+  for (const minutes of [0, 15, 30])
+    assert.equal(
+      validatePolicy(values({ late_minutes: minutes }), session).valid,
+      true,
+      String(minutes),
+    );
+  for (const minutes of [31, 90, 113, 119]) {
+    const check = validatePolicy(values({ late_minutes: minutes }), session);
+    assert.equal(check.valid, false, String(minutes));
+    assert.equal(
+      check.errors.late_minutes,
+      'Late allowance must be at most 30 minutes.',
+    );
+    assert.deepEqual(check.payload, {});
+  }
+});
+
+test('a long late allowance has a message to show while typing', () => {
   assert.equal(
-    validatePolicy(values({ late_minutes: 119 }), session).valid,
-    true,
+    lateTooLongMessage(31, session),
+    'Late allowance must be at most 30 minutes.',
   );
   assert.equal(
-    validatePolicy(
-      values({ late_minutes: 120 }),
-      session,
-    ).errors.late_minutes.includes('at most 119'),
-    true,
+    lateTooLongMessage('113', session),
+    'Late allowance must be at most 30 minutes.',
   );
+  // Nothing to say while the value is fine or not a number yet.
+  for (const fine of [0, 15, 30, '', null, undefined, 'abc', -1, 1.5])
+    assert.equal(lateTooLongMessage(fine, session), '', String(fine));
+  assert.equal(lateTooLongMessage(40, null), '');
+  const short = { ...session, ends_at: '2026-11-20T01:20:00.000Z' };
+  assert.match(
+    lateTooLongMessage(25, short),
+    /at most 19 minutes, so the late time is before the session ends/,
+  );
+  // The saved check and the live message say the same thing.
+  assert.equal(
+    validatePolicy(values({ late_minutes: 45 }), session).errors.late_minutes,
+    lateTooLongMessage(45, session),
+  );
+});
+
+test('a short session says its own length is the limit', () => {
+  const short = { ...session, ends_at: '2026-11-20T01:20:00.000Z' };
+  const check = validatePolicy(values({ late_minutes: 25 }), short);
+  assert.equal(check.valid, false);
+  assert.equal(
+    check.errors.late_minutes,
+    'Late allowance must be at most 19 minutes, so the late time is before the session ends.',
+  );
+  assert.equal(validatePolicy(values({ late_minutes: 19 }), short).valid, true);
 });
 
 test('valid values become the API body with an exact late time', () => {

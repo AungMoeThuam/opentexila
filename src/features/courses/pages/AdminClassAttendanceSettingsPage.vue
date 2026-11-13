@@ -18,6 +18,7 @@ import {
   changedPolicyFields,
   differsFromClass,
   isEditable,
+  lateTooLongMessage,
   maxLateMinutes,
   policyFormValues,
   policySummary,
@@ -66,6 +67,13 @@ const summary = computed(() => policySummary(values, selected.value));
 const maxLate = computed(() =>
   selected.value ? maxLateMinutes(selected.value) : 0,
 );
+// The errors shown under the fields. A late allowance that is too long shows
+// its error at once, also for a session saved with a longer one before there
+// was a limit; the other errors come from saving.
+const shownErrors = computed(() => {
+  const tooLong = lateTooLongMessage(values.late_minutes, selected.value);
+  return tooLong ? { ...errors.value, late_minutes: tooLong } : errors.value;
+});
 // What would be sent: only the fields that differ from the saved session.
 const changes = computed(() => {
   if (!selected.value) return {};
@@ -388,7 +396,7 @@ onBeforeUnmount(() => {
 
         <AttendancePolicyForm
           :values="values"
-          :errors="errors"
+          :errors="shownErrors"
           :disabled="saving"
           :max-late="maxLate"
           :probe="probe"
