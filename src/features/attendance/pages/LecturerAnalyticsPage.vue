@@ -16,7 +16,8 @@ import ChartSkeleton from '../components/charts/ChartSkeleton.vue';
 import { useAttendanceAnalytics } from '../composables/use-attendance-analytics.js';
 import { useAttendanceClassOptions } from '../composables/use-attendance-class-options.js';
 import { formatRate } from '../composables/use-chart-data.js';
-import { analyticsService } from '../services/index.js';
+import { useSessionRooms } from '../composables/use-session-rooms.js';
+import { analyticsService, classSessionsService } from '../services/index.js';
 import { filtersToQuery } from '../services/analytics-query.js';
 
 // Chart.js stays out of the main bundle: each chart loads when this page opens.
@@ -70,13 +71,24 @@ watch(error, (failure) => {
   if (failure?.status === 403) router.replace({ name: 'forbidden' });
 });
 
+// The rooms of the sessions that wait for an attendance record.
+const sessionRooms = useSessionRooms({ service: classSessionsService });
+watch(
+  () => data.value?.unfinalised,
+  (waiting) => sessionRooms.load(waiting ?? []),
+  { immediate: true },
+);
+
 const firstLoad = computed(() => loading.value && !data.value);
 const failedFirstLoad = computed(() =>
   error.value && !data.value ? error.value : null,
 );
 const summary = computed(() => data.value?.summary);
 
-onBeforeUnmount(dispose);
+onBeforeUnmount(() => {
+  dispose();
+  sessionRooms.stop();
+});
 
 onMounted(() => {
   load();
@@ -132,8 +144,8 @@ onMounted(() => {
   <RequestState
     v-else-if="isEmpty"
     state="empty"
-    title="No finalised class sessions"
-    message="No finalised class sessions in this range. Sessions count here once a Lecturer finalises them."
+    title="No submitted class sessions"
+    message="No class sessions with a submitted attendance record in this range. Sessions count here once a lecturer submits the attendance record."
   />
   <div v-else-if="data" :aria-busy="loading">
     <div
@@ -151,6 +163,7 @@ onMounted(() => {
       v-if="data.unfinalised.length"
       :sessions="data.unfinalised"
       :classes="data.byClass"
+      :rooms="sessionRooms.rooms.value"
       :finalising-id="finalisingId"
       :error="finaliseError"
       @finalise="finalise"
@@ -159,7 +172,7 @@ onMounted(() => {
     <ul class="list-unstyled row g-3 mb-4" aria-label="Summary">
       <li class="col-12 col-md-4">
         <div class="ot-card h-100">
-          <p class="ot-eyebrow mb-1">Finalised class sessions</p>
+          <p class="ot-eyebrow mb-1">Submitted class sessions</p>
           <p class="ot-page-title mb-0">{{ summary.sessions }}</p>
         </div>
       </li>

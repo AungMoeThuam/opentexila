@@ -23,7 +23,7 @@ const {
 } = useLecturerSessions({ service: classSessionsService });
 
 const hasFilters = computed(() =>
-  Boolean(filters.classId || filters.from || filters.to),
+  Boolean(filters.classId || filters.from || filters.to || filters.status),
 );
 const state = computed(() => {
   if (error.value) return 'error';

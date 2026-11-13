@@ -1,5 +1,11 @@
 import { computed, reactive, ref } from 'vue';
 import { toQueryParams } from '../services/filter-params.js';
+import {
+  fetchAllSessions,
+  isStatus,
+  matchesStatus,
+  pageOf,
+} from '../services/session-status-filter.js';
 
 const isPageInRange = (value, totalPages) =>
   Number.isInteger(value) && value >= 1 && value <= totalPages;
@@ -7,7 +13,7 @@ const isPageInRange = (value, totalPages) =>
 export function useLecturerSessions({ service, limit = 20 }) {
   const sessions = ref([]);
   const meta = ref(null);
-  const filters = reactive({ classId: '', from: '', to: '' });
+  const filters = reactive({ classId: '', from: '', to: '', status: '' });
   const page = ref(1);
   const loading = ref(false);
   const error = ref(null);
@@ -54,11 +60,27 @@ export function useLecturerSessions({ service, limit = 20 }) {
     loading.value = true;
     error.value = null;
     try {
-      const result = await service.listMyClassSessions(params, { signal });
-      if (id !== requestId) return;
+      let result;
+      if (isStatus(filters.status)) {
+        // The API cannot filter by status, so take every session that matches
+        // the other filters, keep the ones with this status and page them here.
+        const { page: _page, limit: _limit, ...rest } = params;
+        const all = await fetchAllSessions(service, rest, { signal });
+        if (id !== requestId) return;
+        rememberClasses(all);
+        result = pageOf(
+          all.filter((session) => matchesStatus(session, filters.status)),
+          page.value,
+          limit,
+        );
+        page.value = result.meta.page;
+      } else {
+        result = await service.listMyClassSessions(params, { signal });
+        if (id !== requestId) return;
+        rememberClasses(result.data);
+      }
       sessions.value = result.data;
       meta.value = result.meta;
-      rememberClasses(result.data);
     } catch (cause) {
       if (id !== requestId || cause?.name === 'AbortError') return;
       error.value = cause;
@@ -78,6 +100,7 @@ export function useLecturerSessions({ service, limit = 20 }) {
     filters.classId = '';
     filters.from = '';
     filters.to = '';
+    filters.status = '';
     page.value = 1;
     filterError.value = '';
     return load();

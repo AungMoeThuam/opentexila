@@ -19,8 +19,10 @@ const isAnalyticsPayload = (payload) =>
   Array.isArray(payload.data.atRisk);
 
 const FINALISE_PROBLEMS = {
-  not_due: 'This class session has not ended yet, so it cannot be finalised.',
-  cancelled: 'This class session was cancelled, so it cannot be finalised.',
+  not_due:
+    'This class session has not ended yet, so its attendance record cannot be submitted.',
+  cancelled:
+    'This class session was cancelled, so its attendance record cannot be submitted.',
 };
 
 const FILTER_KEYS = ['from', 'to', 'atRiskBelow'];
@@ -146,7 +148,7 @@ export function useAttendanceAnalytics({
       else await load();
     } catch (cause) {
       finaliseError.value =
-        cause?.message ?? 'Could not finalise this session.';
+        cause?.message ?? 'Could not submit the attendance record.';
     } finally {
       finalisingId.value = null;
     }

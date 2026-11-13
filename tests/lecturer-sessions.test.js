@@ -227,7 +227,10 @@ test('clearFilters resets filters, page and filterError, then reloads', async ()
 
   await lecturer.clearFilters();
 
-  assert.deepEqual({ ...lecturer.filters }, { classId: '', from: '', to: '' });
+  assert.deepEqual(
+    { ...lecturer.filters },
+    { classId: '', from: '', to: '', status: '' },
+  );
   assert.equal(lecturer.page.value, 1);
   assert.equal(lecturer.filterError.value, '');
   assert.deepEqual(service.calls.at(-1).params, { page: 1, limit: 20 });
