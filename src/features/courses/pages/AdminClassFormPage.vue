@@ -16,6 +16,14 @@ import {
   classFormValues,
   validateClassForm,
 } from '../services/course-class-validation.js';
+import {
+  NEW_TERM,
+  classListLocation,
+  lastPage,
+  matchingTerm,
+  parseId,
+  termChoices,
+} from '../services/class-list-query.js';
 import { formErrorsFrom } from '../services/form-errors.js';
 import { adminClassesService } from '../../enrolments/services/index.js';
 import {
@@ -32,6 +40,11 @@ import {
 const route = useRoute();
 const router = useRouter();
 const editing = computed(() => route.name === 'admin-class-edit');
+// Back to the Classes list with the filters it had (they are in the address of
+// this form, put there by the list).
+const listTo = computed(() =>
+  classListLocation(route.query, { page: parseId(route.query.page) ?? 1 }),
+);
 const form = reactive(classFormValues(null));
 const original = ref(null);
 const courses = ref([]);
@@ -125,6 +138,11 @@ async function loadPage() {
     roomNote.value = null;
     original.value = detail;
     Object.assign(form, classFormValues(detail));
+    // With no term to pick from, start with the field for a new term.
+    termMode.value =
+      !form.term && !termChoices(classRows, { excludeId: detail?.id }).length
+        ? 'new'
+        : 'pick';
     if (!detail) {
       const preset = Number(route.query.courseId);
       if (courseRows.some((course) => course.id === preset))
@@ -141,10 +159,43 @@ async function loadPage() {
   }
 }
 
+// The Term field is a list of the terms in use, and a choice to add a new one.
+// In "new" mode a text field takes the new term.
+const termMode = ref('pick'); // 'pick' | 'new'
+const termList = computed(() =>
+  termChoices(existing.value, {
+    current:
+      termMode.value === 'pick' ? form.term : (original.value?.term ?? ''),
+    excludeId: currentId.value,
+  }),
+);
+const termSelectValue = computed(() =>
+  termMode.value === 'new' ? NEW_TERM : matchingTerm(termList.value, form.term),
+);
+
+async function chooseTerm(event) {
+  const value = event.target.value;
+  if (value === NEW_TERM) {
+    termMode.value = 'new';
+    form.term = '';
+    await nextTick();
+    document.getElementById('class-term-new')?.focus();
+    return;
+  }
+  termMode.value = 'pick';
+  form.term = value;
+}
+
 // Writes a term or room the way an existing class spells it ("2026 s2" becomes
-// "2026-S2"), so one term or room is never saved under two spellings.
+// "2026-S2"), so one term or room is never saved under two spellings. A new
+// term that is already in the list goes back to the list.
 function tidyTerm() {
   form.term = canonicalValue(form.term, termOptions.value);
+  const match = matchingTerm(termList.value, form.term);
+  if (match) {
+    form.term = match;
+    termMode.value = 'pick';
+  }
 }
 
 // A room another class already uses brings that class's location. A new class
@@ -234,10 +285,20 @@ async function save() {
       `${saved.course.code} section ${saved.section} (${saved.term}) ${editing.value ? 'updated' : 'created'}.`,
       'success',
     );
-    router.push({
-      name: 'admin-classes',
-      query: { courseId: saved.course.id },
-    });
+    // After an edit the list comes back as it was, on the same page. After a
+    // new class the list shows all classes, on the last page, where the new
+    // class is (the list is in id order). Either way the saved class is marked.
+    router.push(
+      editing.value
+        ? classListLocation(route.query, {
+            highlight: saved.id,
+            page: parseId(route.query.page) ?? 1,
+          })
+        : classListLocation(
+            {},
+            { highlight: saved.id, page: lastPage(existing.value.length + 1) },
+          ),
+    );
   } catch (cause) {
     if (!active) return;
     if (cause?.status === 403 && cause.code === 'FORBIDDEN')
@@ -277,7 +338,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="ot-page-content">
-    <RouterLink class="d-inline-block mb-4" :to="{ name: 'admin-classes' }"
+    <RouterLink class="d-inline-block mb-4" :to="listTo"
       >← All classes</RouterLink
     >
     <header class="ot-page-header">
@@ -319,9 +380,7 @@ onBeforeUnmount(() => {
     <div v-if="notFound" class="ot-card ot-empty">
       <h2 class="ot-section-title">Class not found</h2>
       <p class="ot-meta">This class does not exist.</p>
-      <RouterLink
-        class="btn btn-outline-primary"
-        :to="{ name: 'admin-classes' }"
+      <RouterLink class="btn btn-outline-primary" :to="listTo"
         >Back to classes</RouterLink
       >
     </div>
@@ -404,31 +463,42 @@ onBeforeUnmount(() => {
               label="Term"
               required
               :error="errors.term"
-              hint="e.g. 2026-S2"
+              hint="Pick a term, or add a new one, e.g. 2027-S1."
             >
               <template #default="field">
-                <input
+                <select
                   :id="field.id"
+                  class="form-select"
+                  :class="{ 'is-invalid': field.invalid }"
+                  required
+                  :value="termSelectValue"
+                  :disabled="saving || identityLocked"
+                  :aria-invalid="field.invalid"
+                  :aria-describedby="field.describedby"
+                  @change="chooseTerm"
+                >
+                  <option value="" disabled>Select a term</option>
+                  <option v-for="term in termList" :key="term" :value="term">
+                    {{ term }}
+                  </option>
+                  <option :value="NEW_TERM">Add a new term…</option>
+                </select>
+                <input
+                  v-if="termMode === 'new'"
+                  id="class-term-new"
                   v-model="form.term"
-                  class="form-control"
+                  class="form-control mt-2"
                   :class="{ 'is-invalid': field.invalid }"
                   type="text"
                   maxlength="50"
                   autocomplete="off"
-                  list="class-term-options"
-                  required
+                  placeholder="e.g. 2027-S1"
+                  aria-label="New term"
                   :disabled="saving || identityLocked"
                   :aria-invalid="field.invalid"
                   :aria-describedby="field.describedby"
                   @change="tidyTerm"
                 />
-                <datalist id="class-term-options">
-                  <option
-                    v-for="option in termOptions"
-                    :key="option.value"
-                    :value="option.value"
-                  ></option>
-                </datalist>
               </template>
             </FormField>
           </div>
@@ -609,7 +679,7 @@ onBeforeUnmount(() => {
           class="btn btn-outline-primary"
           :class="{ disabled: saving }"
           :aria-disabled="saving"
-          :to="{ name: 'admin-classes' }"
+          :to="listTo"
           >Cancel</RouterLink
         >
       </div>
