@@ -231,127 +231,6 @@ onBeforeUnmount(() => {
       </div>
     </header>
 
-    <!-- Quick access -->
-    <section class="student-section" aria-labelledby="quick-access-heading">
-      <div class="section-heading">
-        <div>
-          <p class="ot-eyebrow">YOUR WORKSPACE</p>
-
-          <h2 id="quick-access-heading" class="ot-section-title">
-            Quick access
-          </h2>
-
-          <p class="section-description">
-            Everything you need, just one click away.
-          </p>
-        </div>
-      </div>
-
-      <div class="row g-3">
-        <div
-          v-for="link in quickLinks"
-          :key="link.to"
-          class="col-12 col-md-6 col-xl-4"
-        >
-          <RouterLink
-            :to="link.to"
-            class="quick-card"
-            :aria-label="link.action"
-          >
-            <span class="quick-icon">
-              <!-- My classes: book -->
-              <svg
-                v-if="link.icon === 'book'"
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 7a8 8 0 0 0-9-2v14a8 8 0 0 1 9 2" />
-                <path d="M12 7a8 8 0 0 1 9-2v14a8 8 0 0 0-9 2" />
-                <path d="M12 7v14" />
-              </svg>
-
-              <!-- Scheduled classes: calendar -->
-              <svg
-                v-else-if="link.icon === 'calendar'"
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <rect x="3" y="5" width="18" height="16" rx="2" />
-                <path d="M16 3v4M8 3v4M3 10h18" />
-                <path d="M8 14h.01M12 14h.01M16 14h.01" />
-                <path d="M8 18h.01M12 18h.01" />
-              </svg>
-
-              <!-- Attendance history: clipboard -->
-              <svg
-                v-else-if="link.icon === 'clipboard'"
-                xmlns="http://www.w3.org/2000/svg"
-                width="22"
-                height="22"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <rect x="4" y="5" width="16" height="16" rx="2" />
-                <rect x="9" y="3" width="6" height="4" rx="1" />
-                <path d="m8 14 2 2 5-5" />
-              </svg>
-            </span>
-
-            <span class="quick-card-content">
-              <strong class="quick-title">
-                {{ link.title }}
-              </strong>
-
-              <span class="quick-description">
-                {{ link.description }}
-              </span>
-
-              <span class="quick-action">
-                {{ link.action }}
-
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="15"
-                  height="15"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M5 12h14" />
-                  <path d="m13 6 6 6-6 6" />
-                </svg>
-              </span>
-            </span>
-          </RouterLink>
-        </div>
-      </div>
-    </section>
-
     <!-- Today's classes -->
     <section class="student-section" aria-labelledby="today-classes-heading">
       <div class="section-heading">
@@ -569,6 +448,127 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </template>
+    </section>
+
+    <!-- Quick access -->
+    <section class="student-section" aria-labelledby="quick-access-heading">
+      <div class="section-heading">
+        <div>
+          <p class="ot-eyebrow">YOUR WORKSPACE</p>
+
+          <h2 id="quick-access-heading" class="ot-section-title">
+            Quick access
+          </h2>
+
+          <p class="section-description">
+            Everything you need, just one click away.
+          </p>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div
+          v-for="link in quickLinks"
+          :key="link.to"
+          class="col-12 col-md-6 col-xl-4"
+        >
+          <RouterLink
+            :to="link.to"
+            class="quick-card"
+            :aria-label="link.action"
+          >
+            <span class="quick-icon">
+              <!-- My classes: book -->
+              <svg
+                v-if="link.icon === 'book'"
+                xmlns="http://www.w3.org/2000/svg"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 7a8 8 0 0 0-9-2v14a8 8 0 0 1 9 2" />
+                <path d="M12 7a8 8 0 0 1 9-2v14a8 8 0 0 0-9 2" />
+                <path d="M12 7v14" />
+              </svg>
+
+              <!-- Scheduled classes: calendar -->
+              <svg
+                v-else-if="link.icon === 'calendar'"
+                xmlns="http://www.w3.org/2000/svg"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="5" width="18" height="16" rx="2" />
+                <path d="M16 3v4M8 3v4M3 10h18" />
+                <path d="M8 14h.01M12 14h.01M16 14h.01" />
+                <path d="M8 18h.01M12 18h.01" />
+              </svg>
+
+              <!-- Attendance history: clipboard -->
+              <svg
+                v-else-if="link.icon === 'clipboard'"
+                xmlns="http://www.w3.org/2000/svg"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="4" y="5" width="16" height="16" rx="2" />
+                <rect x="9" y="3" width="6" height="4" rx="1" />
+                <path d="m8 14 2 2 5-5" />
+              </svg>
+            </span>
+
+            <span class="quick-card-content">
+              <strong class="quick-title">
+                {{ link.title }}
+              </strong>
+
+              <span class="quick-description">
+                {{ link.description }}
+              </span>
+
+              <span class="quick-action">
+                {{ link.action }}
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m13 6 6 6-6 6" />
+                </svg>
+              </span>
+            </span>
+          </RouterLink>
+        </div>
+      </div>
     </section>
   </main>
 </template>

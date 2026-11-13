@@ -66,7 +66,12 @@ test('totals load from one row per list and set the state', async () => {
   assert.equal(home.state.value, 'loading');
   await home.load();
   assert.equal(home.state.value, 'success');
-  assert.deepEqual(home.counts.value, { courses: 12, classes: 1 });
+  assert.deepEqual(home.counts.value, {
+    courses: 12,
+    classes: 1,
+    students: null,
+    lecturers: null,
+  });
   assert.deepEqual(requests, [
     { page: 1, limit: 1 },
     { page: 1, limit: 1 },
@@ -80,7 +85,12 @@ test('no courses and no classes is the empty state', async () => {
   });
   await home.load();
   assert.equal(home.state.value, 'empty');
-  assert.deepEqual(home.counts.value, { courses: 0, classes: 0 });
+  assert.deepEqual(home.counts.value, {
+    courses: 0,
+    classes: 0,
+    students: null,
+    lecturers: null,
+  });
   // One of them is enough to show the totals.
   const some = useAdminHomeCounts({
     coursesService: { list: listing(0) },
@@ -104,12 +114,22 @@ test('a failure shows the error state and Retry loads again', async () => {
   await home.load();
   assert.equal(home.state.value, 'error');
   assert.equal(home.error.value.message, 'Offline');
-  assert.deepEqual(home.counts.value, { courses: null, classes: null });
+  assert.deepEqual(home.counts.value, {
+    courses: null,
+    classes: null,
+    students: null,
+    lecturers: null,
+  });
   fail = false;
   await home.retry();
   assert.equal(home.state.value, 'success');
   assert.equal(home.error.value, null);
-  assert.deepEqual(home.counts.value, { courses: 2, classes: 4 });
+  assert.deepEqual(home.counts.value, {
+    courses: 2,
+    classes: 4,
+    students: null,
+    lecturers: null,
+  });
 });
 
 test('a newer load replaces an older one and stop cancels it', async () => {
@@ -138,7 +158,78 @@ test('a newer load replaces an older one and stop cancels it', async () => {
   assert.equal(signals[0].aborted, true, 'the first request was cancelled');
   release();
   await first;
-  assert.deepEqual(home.counts.value, { courses: 5, classes: 6 });
+  assert.deepEqual(home.counts.value, {
+    courses: 5,
+    classes: 6,
+    students: null,
+    lecturers: null,
+  });
   home.stop();
   assert.equal(signals.at(-1).aborted, true);
+});
+
+test('student and lecturer totals use one row per role', async () => {
+  const requests = [];
+  const users = async (params) => {
+    requests.push(params);
+    return listing(params.role === 'student' ? 20 : 4)(params);
+  };
+  const home = useAdminHomeCounts({
+    coursesService: { list: listing(2) },
+    classesService: { list: listing(3) },
+    usersService: { list: users },
+  });
+  await home.load();
+  assert.equal(home.state.value, 'success');
+  assert.deepEqual(home.counts.value, {
+    courses: 2,
+    classes: 3,
+    students: 20,
+    lecturers: 4,
+  });
+  assert.deepEqual(requests, [
+    { page: 1, limit: 1, role: 'student' },
+    { page: 1, limit: 1, role: 'lecturer' },
+  ]);
+});
+
+test('accounts alone do not make an empty institution look set up', async () => {
+  const home = useAdminHomeCounts({
+    coursesService: { list: listing(0) },
+    classesService: { list: listing(0) },
+    usersService: { list: listing(30) },
+  });
+  await home.load();
+  assert.equal(home.state.value, 'empty');
+  assert.equal(home.counts.value.students, 30);
+});
+
+test('a failed user list shows the error state', async () => {
+  const home = useAdminHomeCounts({
+    coursesService: { list: listing(2) },
+    classesService: { list: listing(3) },
+    usersService: {
+      list: async () => {
+        throw new ApiError('Offline', { code: 'NETWORK_ERROR' });
+      },
+    },
+  });
+  await home.load();
+  assert.equal(home.state.value, 'error');
+  assert.equal(home.counts.value.students, null);
+});
+
+test('every shortcut has an icon from the shared set', () => {
+  const icons = [
+    'home',
+    'book',
+    'check',
+    'file',
+    'folder',
+    'bell',
+    'users',
+    'chart',
+  ];
+  for (const link of ADMIN_HOME_LINKS)
+    assert.ok(icons.includes(link.icon), `${link.key}: ${link.icon}`);
 });
