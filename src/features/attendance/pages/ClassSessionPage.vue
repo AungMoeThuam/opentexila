@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { api } from '../../../app-context';
 import RequestState from '../../../shared/components/RequestState.vue';
@@ -11,6 +11,11 @@ import {
   messages,
   readLocation,
 } from '../services/attendance';
+import { GOOD_ENOUGH_M } from '../services/location-reading.js';
+import {
+  ALLOW_LOCATION_STEPS,
+  watchLocationPermission,
+} from '../services/location-permission.js';
 const route = useRoute();
 const service = createAttendanceService(api);
 const session = ref(null);
@@ -19,7 +24,17 @@ const error = ref('');
 const actionError = ref('');
 const busy = ref(false);
 const phase = ref('');
+// The browser's location permission: 'granted', 'prompt', 'denied', or
+// 'unknown' when the browser cannot say. Once it is 'denied' the browser does
+// not ask again, so the page shows how to allow it instead of a useless retry.
+const permission = ref('unknown');
+const blocked = computed(() => permission.value === 'denied');
+// A check-in that failed because location was denied (also for browsers that
+// cannot report the permission).
+const deniedSeen = ref(false);
+const showSteps = computed(() => blocked.value || deniedSeen.value);
 let controller;
+let permissionWatch = null;
 const confirmed = computed(() =>
   ['present', 'late'].includes(session.value?.my_attendance?.status),
 );
@@ -52,10 +67,20 @@ async function checkIn() {
   const id = session.value.id;
   busy.value = true;
   actionError.value = '';
+  deniedSeen.value = false;
+  let accuracyM = null;
   phase.value = 'Finding your location…';
   try {
-    const reading = await readLocation();
+    // Waits for a reading that is accurate enough, instead of sending the
+    // first, often rough, one.
+    const reading = await readLocation(undefined, {
+      signal: current.signal,
+      onProgress: ({ accuracy_m: accuracy }) => {
+        phase.value = `Improving location accuracy… about ${Math.round(accuracy)} m, ${GOOD_ENOUGH_M} m needed`;
+      },
+    });
     if (current.signal.aborted) return;
+    accuracyM = reading.accuracy_m;
     phase.value = 'Submitting check-in…';
     const result = await service.checkIn(id, reading, current.signal);
     if (current.signal.aborted) return;
@@ -71,7 +96,8 @@ async function checkIn() {
     };
   } catch (failure) {
     if (current.signal.aborted) return;
-    actionError.value = errorMessage(failure);
+    actionError.value = errorMessage(failure, { accuracyM });
+    deniedSeen.value = failure.code === 'LOCATION_DENIED';
     if (
       [
         'NOT_STARTED',
@@ -96,8 +122,28 @@ async function checkIn() {
     if (!current.signal.aborted) busy.value = false;
   }
 }
+// When location becomes blocked, an older error goes (the steps explain it).
+// When the student allows location again, the "denied" message goes away and
+// check-in is available without reloading the page.
+watch(permission, (state) => {
+  if (state === 'denied') {
+    // The steps explain what is wrong; an older error would only confuse.
+    if (!deniedSeen.value) actionError.value = '';
+  } else if (deniedSeen.value) {
+    deniedSeen.value = false;
+    actionError.value = '';
+  }
+});
 watch(() => route.params.classSessionId, load, { immediate: true });
-onBeforeUnmount(() => controller?.abort());
+onMounted(async () => {
+  permissionWatch = await watchLocationPermission((state) => {
+    permission.value = state;
+  });
+});
+onBeforeUnmount(() => {
+  controller?.abort();
+  permissionWatch?.stop();
+});
 </script>
 <template>
   <RouterLink class="d-inline-block mb-4" :to="{ name: 'student-attendance' }"
@@ -165,14 +211,32 @@ onBeforeUnmount(() => controller?.abort());
           Your browser will ask for permission.
         </p>
         <div
-          v-if="actionError"
+          v-if="actionError && !deniedSeen"
           class="ot-notice ot-notice--error my-3"
           role="alert"
         >
           {{ actionError }}
         </div>
+        <div
+          v-if="allowed && showSteps"
+          class="ot-notice ot-notice--warning my-3"
+          role="alert"
+          data-test="location-blocked"
+        >
+          <p class="fw-semibold mb-2">Allow location to check in</p>
+          <p class="mb-2">
+            Your browser has blocked location for this site, and it will not ask
+            again. To change it:
+          </p>
+          <ol class="mb-2 ps-3">
+            <li v-for="step in ALLOW_LOCATION_STEPS" :key="step">{{ step }}</li>
+          </ol>
+          <p class="mb-0">
+            Also check that location services are turned on for your device.
+          </p>
+        </div>
         <button
-          v-if="allowed"
+          v-if="allowed && !blocked"
           class="btn btn-primary w-100"
           :disabled="busy"
           @click="checkIn"
