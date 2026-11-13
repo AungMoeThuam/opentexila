@@ -207,7 +207,7 @@ onBeforeUnmount(() => {
               <dt class="col-4">Room</dt>
               <dd class="col-8">{{ cls.room_label || '—' }}</dd>
             </dl>
-            <div class="d-flex flex-wrap gap-2 mt-auto">
+            <div class="ot-class-actions mt-auto">
               <RouterLink
                 class="btn btn-primary"
                 :to="{ name: 'admin-class-edit', params: { classId: cls.id } }"
@@ -245,3 +245,18 @@ onBeforeUnmount(() => {
     </section>
   </div>
 </template>
+
+<style scoped>
+/* The three card buttons share the row in equal columns, so they line up the same
+   whether the sidebar is open or closed. When the card is too narrow for three,
+   they wrap into an even grid and not a ragged row. */
+.ot-class-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
+  gap: 0.5rem;
+}
+.ot-class-actions :deep(.btn) {
+  padding-inline: 0.5rem;
+  white-space: nowrap;
+}
+</style>
