@@ -147,6 +147,8 @@ Place this inside the layout’s existing page wrapper; do not nest two `.ot-pag
 - Use Bootstrap’s grid: `row g-4`, `col-12`, then `col-md-*` / `col-lg-*` as needed. Standard breakpoints stay unchanged: 576 / 768 / 992 / 1200 / 1400px.
 - Use one column on phones. The common details + action layout becomes 7/5 columns at `lg` (992px).
 - Check at **390px, 768px and 1280px**, plus 200% zoom. These are review widths, not custom Bootstrap breakpoints.
+- Wide tables (more than about four columns) become a stacked card list below `md` (768px): show the table with `.d-none .d-md-block` and a `ul.list-unstyled.d-md-none` of cards, both from the same rows. Each card leads with the identifying cell and the key figure, then a compact label/value grid for the rest. See `AtRiskStudentList.vue`.
+- Charts with long category labels switch to horizontal bars below `sm` (576px) so labels stay readable; the chart frame grows with the number of categories. See `ClassComparisonChart.vue`.
 - Let headings wrap. Do not give content cards fixed heights. Use `.table-responsive` for tables rather than squeezing text or causing the whole page to scroll sideways.
 - Use real buttons for actions and RouterLink/anchors for navigation. Specify button `type`.
 - Associate labels and help/errors with unique input IDs. Keep visible focus outlines and logical Tab order.

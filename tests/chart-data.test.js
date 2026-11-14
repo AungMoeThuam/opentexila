@@ -129,6 +129,42 @@ test('class comparison is a grouped bar with one label per class', () => {
   assert.equal(chart.empty, false);
 });
 
+test('horizontal class comparison puts classes on the y axis in short lines', () => {
+  const chart = buildClassComparisonChart(BY_CLASS, { horizontal: true });
+  assert.equal(chart.options.indexAxis, 'y');
+  assert.ok(chart.options.scales.x.beginAtZero);
+  assert.equal(chart.options.scales.y, undefined);
+  assert.deepEqual(chart.data.labels, [
+    ['COS30043', 'Interface Design', 'Sec 01, 2026-S2'],
+  ]);
+  assert.ok(chart.frameHeightRem > 0);
+  assert.deepEqual(series(chart), { Present: [95], Late: [10], Absent: [15] });
+});
+
+test('long course names wrap onto several short axis lines', () => {
+  const [lines] = buildClassComparisonChart(
+    [
+      {
+        ...BY_CLASS[0],
+        course: { code: 'COS30043', name: 'Interface Design and Development' },
+      },
+    ],
+    { horizontal: true },
+  ).data.labels;
+  assert.deepEqual(lines, [
+    'COS30043',
+    'Interface Design',
+    'and Development',
+    'Sec 01, 2026-S2',
+  ]);
+});
+
+test('vertical class comparison keeps the default frame height', () => {
+  const chart = buildClassComparisonChart(BY_CLASS);
+  assert.equal(chart.options.indexAxis, undefined);
+  assert.equal(chart.frameHeightRem, null);
+});
+
 test('a palette override is used for series colours', () => {
   const chart = buildTrendChart(TREND, {
     palette: { present: '#111111', late: '#222222', absent: '#333333' },
