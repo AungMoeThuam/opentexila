@@ -67,6 +67,11 @@ const state = computed(() => {
         <div v-show="!showTable">
           <div
             class="position-relative chart-frame"
+            :style="
+              chart.frameHeightRem
+                ? { height: `${chart.frameHeightRem}rem` }
+                : undefined
+            "
             role="img"
             :aria-label="chart.ariaLabel"
           >

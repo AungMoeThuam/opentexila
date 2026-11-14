@@ -17,6 +17,32 @@ const sum = (values) => values.reduce((total, value) => total + value, 0);
 
 export const formatRate = (rate) => `${Number(rate).toFixed(1)}%`;
 
+const LABEL_LINE_MAX = 18;
+
+// Greedy word wrap; a single long word keeps its own line.
+function wrapWords(text, max = LABEL_LINE_MAX) {
+  const lines = [];
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    const last = lines.length - 1;
+    if (last >= 0 && lines[last].length + 1 + word.length <= max) {
+      lines[last] += ` ${word}`;
+    } else lines.push(word);
+  }
+  return lines;
+}
+
+// The same label broken into short lines, for narrow horizontal-bar axes.
+export function classLabelLines(cls) {
+  const detail = [cls.section ? `Sec ${cls.section}` : '', cls.term]
+    .filter(Boolean)
+    .join(', ');
+  return [
+    cls.course?.code,
+    ...wrapWords(cls.course?.name ?? ''),
+    detail,
+  ].filter(Boolean);
+}
+
 export function classLabel(cls) {
   const course = [cls.course?.code, cls.course?.name].filter(Boolean).join(' ');
   const detail = [cls.section ? `Sec ${cls.section}` : '', cls.term]
@@ -112,18 +138,27 @@ export function buildStatusBreakdownChart(
   };
 }
 
+// Rows of horizontal bars, each with room for three bars and a gap.
+const HORIZONTAL_ROW_REM = 6;
+const HORIZONTAL_CHROME_REM = 4;
+
+// `horizontal` puts classes on the y axis so long names stay readable on phones.
 export function buildClassComparisonChart(
   byClass,
-  { palette = DEFAULT_PALETTE } = {},
+  { palette = DEFAULT_PALETTE, horizontal = false } = {},
 ) {
   const rows = byClass ?? [];
+  const countAxis = { beginAtZero: true, ticks: { precision: 0 } };
   return {
+    frameHeightRem: horizontal
+      ? rows.length * HORIZONTAL_ROW_REM + HORIZONTAL_CHROME_REM
+      : null,
     type: 'bar',
     empty: rows.length === 0,
     ariaLabel: 'Bar chart comparing present, late and absent counts by class',
     summary: `Attendance for ${rows.length} classes, with present, late and absent counts and the attendance rate of each.`,
     data: {
-      labels: rows.map(classLabel),
+      labels: rows.map(horizontal ? classLabelLines : classLabel),
       datasets: STATUSES.map(({ key, label, dash }) => ({
         label,
         data: rows.map((row) => row[key]),
@@ -135,7 +170,8 @@ export function buildClassComparisonChart(
     },
     options: {
       ...baseOptions,
-      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+      ...(horizontal ? { indexAxis: 'y' } : {}),
+      scales: horizontal ? { x: countAxis } : { y: countAxis },
     },
     tableColumns: [
       { key: 'class', label: 'Class' },

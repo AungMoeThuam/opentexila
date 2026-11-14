@@ -75,9 +75,45 @@ const onThreshold = (event) =>
     <p v-if="!rows.length" class="mb-0" role="status">
       No students are below {{ appliedThreshold }}% for these filters.
     </p>
+    <ul v-else class="list-unstyled mb-0 d-md-none at-risk-cards">
+      <li
+        v-for="row in rows"
+        :key="`${row.studentId}-${row.classId}`"
+        class="at-risk-card"
+      >
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div class="min-w-0">
+            <span class="fw-bold d-block">{{ row.name }}</span>
+            <span class="ot-meta text-break">{{ row.email }}</span>
+          </div>
+          <span class="fw-bold text-nowrap">
+            {{ formatRate(row.attendanceRate) }}
+          </span>
+        </div>
+        <p class="ot-meta mb-2 mt-1">{{ labelFor(row.classId) }}</p>
+        <dl class="at-risk-counts mb-0">
+          <div>
+            <dt>Sessions</dt>
+            <dd>{{ row.sessions }}</dd>
+          </div>
+          <div>
+            <dt>Present</dt>
+            <dd>{{ row.present }}</dd>
+          </div>
+          <div>
+            <dt>Late</dt>
+            <dd>{{ row.late }}</dd>
+          </div>
+          <div>
+            <dt>Absent</dt>
+            <dd>{{ row.absent }}</dd>
+          </div>
+        </dl>
+      </li>
+    </ul>
     <div
-      v-else
-      class="table-responsive"
+      v-if="rows.length"
+      class="table-responsive d-none d-md-block"
       tabindex="0"
       role="region"
       aria-label="At-risk students, horizontally scrollable on small screens"
@@ -121,5 +157,30 @@ const onThreshold = (event) =>
 <style scoped>
 .analytics-threshold {
   max-width: 8rem;
+}
+.at-risk-card {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--bs-border-color);
+}
+.at-risk-card:first-child {
+  padding-top: 0;
+}
+.at-risk-card:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.at-risk-counts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+.at-risk-counts dt {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--bs-secondary-color);
+}
+.at-risk-counts dd {
+  margin: 0;
+  font-weight: 700;
 }
 </style>
