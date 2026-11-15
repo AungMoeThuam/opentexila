@@ -25,6 +25,17 @@ npm run dev
 
 Open `http://127.0.0.1:5173`. The public home page works without the backend. For independent UI development, set `VITE_ENABLE_MOCK_AUTH=true` in `.env.local`, restart Vite, open `/login` and choose a demo role. Visit `/dev/example` for working UI behaviours. Mock mode blocks live API requests and is excluded from production. Do not overwrite an existing `.env`.
 
+## Run against the live server (no Docker, no backend)
+
+To try the app with real data without running the backend, use the hosted API at https://opentexila.site:
+
+```sh
+npm ci
+npm run dev:live
+```
+
+Open `http://127.0.0.1:5173` in Chrome, Edge or Firefox (Safari does not accept the session cookies on plain `http`) and sign in with a demo account from [the demo accounts list](docs/PRODUCTION_DEMO_ACCOUNTS.md). Type the password yourself rather than relying on autofill. The settings come from `.env.live`, so there is nothing to create or edit. The live data is shared: a check-in made here is also recorded on the live site.
+
 ## Commands
 
 Docker is also available: `docker compose up --build -d frontend` serves the production build at `http://localhost:8080`; `docker compose up --build frontend-dev` starts hot reload and mock auth at `http://localhost:5173`. See the [Docker guide](docs/DOCKER.md) for backend connections, ports and environment settings.
@@ -32,6 +43,7 @@ Docker is also available: `docker compose up --build -d frontend` serves the pro
 | Command                | Purpose                                                    |
 | ---------------------- | ---------------------------------------------------------- |
 | `npm run dev`          | Start the local Vite server.                               |
+| `npm run dev:live`     | Start the local Vite server against the hosted API.        |
 | `npm test`             | Test the API client, auth state, guards and mock fixtures. |
 | `npm run build`        | Generate production files in `dist/`.                      |
 | `npm run preview`      | Preview the production build locally after building.       |
