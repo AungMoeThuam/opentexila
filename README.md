@@ -2,7 +2,7 @@
 
 Vue 3 frontend for OpenTexila, organised by feature and maintained separately from the NestJS backend.
 
-**Status:** Shared frontend foundation ready: layouts, protected feature routes, role-aware navigation, session state, JSON API client, feedback components and development examples. Authentication, enrolment and attendance pages are placeholders for feature owners; backend authentication endpoints are still required for live sessions.
+**Status:** The app is built for all three roles (admin, lecturer and student) and runs against the live backend at https://opentexila.site. It has sign-in and forced password change, role home pages, courses, classes, class sessions, enrolments, attendance and check-in, analytics, announcements and an admin timetable. Only the generic `enrolments` route still shows a placeholder page. Assignments, resources, classrooms and users are not built.
 
 ## Stack
 
@@ -10,6 +10,7 @@ Vue 3 frontend for OpenTexila, organised by feature and maintained separately fr
 - Vite for development and builds.
 - Vue Router for navigation.
 - Bootstrap 5 CSS and grid, plus custom CSS; no additional UI component library.
+- Chart.js with vue-chartjs for attendance analytics, Leaflet for the geofence map editor and vuedraggable for the timetable. These are focused libraries, not UI kits.
 
 Bootstrap JavaScript plugins are not loaded globally. Add individual plugins only when needed, with lifecycle cleanup; Vue manages the application's state.
 
@@ -56,40 +57,43 @@ Docker is also available: `docker compose up --build -d frontend` serves the pro
 src/
   main.js
   App.vue
-  router/                # Root route assembly
+  app-context.js         # Shared api client and auth store
+  router/                # Root route assembly and access guard
   layouts/               # Public and signed-in shells; role-aware navigation
   features/
-    auth/                # Pages, components, composables, services, store, routes
-    attendance/          # Pages, components, composables, services, routes
-    enrolments/          # Class membership pages and routes
-    dashboard/           # Deferred
-    classrooms/          # Deferred
-    users/               # Deferred
-    announcements/       # Deferred
-    resources/           # Deferred
-    assignments/         # Deferred
+    auth/                # Sign-in, change password, admin account creation
+    dashboard/           # Admin, lecturer and student home pages
+    courses/             # Courses, classes, class sessions, geofence settings (admin)
+    enrolments/          # Class lists, rosters and enrolment (admin, lecturer, student)
+    attendance/          # Check-in, history, session records, analytics
+    scheduling/          # Admin timetable
+    announcements/       # Announcement feed, detail and form
+    classrooms/          # Not built yet
+    users/               # Not built yet
+    resources/           # Not built yet
+    assignments/         # Not built yet
   shared/
-    pages/               # Welcome, errors and feature placeholder
-    components/
+    pages/               # Welcome, errors, style guide and feature placeholder
+    components/          # Icons, sidebar, confirm dialog, notifications, request state
     composables/
-    services/
+    services/            # Shared API client
     utils/
   dev/                   # Mock identity, role toolbar and example page (development only)
   assets/
     images/
     styles/
 public/
-docs/
-tests/
+docs/                    # Guides, design system, demo accounts and decision records (adr/)
+tests/                   # Node test runner; see tests/README.md
 ```
 
-Feature-specific work belongs inside its feature. Cross-feature utilities belong in `shared/`. The empty folders use `.gitkeep`; add implementation files as needed. Feature route arrays are registered under the correct layout. Replace the shared placeholders with feature-owned pages; preserve their names and access metadata.
+Each feature folder holds its own pages, components, composables, services and `routes.js`. Feature-specific work belongs inside its feature. Cross-feature utilities belong in `shared/`. Some empty folders use `.gitkeep`. Feature route arrays are registered under the correct layout in `src/router/index.js`. Keep route names and `meta.roles` when you change a page.
 
 ## Backend configuration
 
 The shared API client reads `VITE_API_BASE_URL` (default `/api/v1`), includes session cookies, handles CSRF for mutations and normalizes errors. Live mode checks `/auth/me` before protected routes or sign-in. Read the [foundation guide](docs/FRONTEND_FOUNDATION.md) for the exact backend contract and usage.
 
-During development, Vite proxies `/api` to `API_PROXY_TARGET`, defaulting to `http://127.0.0.1:3000`. Start the backend separately when implementing integration. The backend has database schemas and development-only sample classroom APIs; auth, enrolment and attendance endpoints still need implementation.
+During development, Vite proxies `/api` to `API_PROXY_TARGET`, defaulting to `http://127.0.0.1:3000`. Start the backend separately for integration work, or use `npm run dev:live` to use the hosted API. API contracts are in the backend repository under `docs/api/`.
 
 Only `VITE_*` settings are exposed to frontend code by default. Treat all frontend configuration as public and never include secrets. The Vite proxy applies only in development; production needs a reverse proxy or an explicit API URL with appropriate CORS, credential and cookie settings.
 
@@ -99,8 +103,14 @@ Vue Router uses HTML5 history. Production hosting must serve `index.html` for fr
 
 Start with the [shared frontend foundation guide](docs/FRONTEND_FOUNDATION.md) for team ownership, route integration, mock mode and API usage.
 
+- [Pages and routes](docs/PAGES_AND_ROUTES.md): the page catalogue by role.
+- [Student attendance](docs/STUDENT_ATTENDANCE.md): how student check-in and history work.
+- [Hosted demo accounts](docs/PRODUCTION_DEMO_ACCOUNTS.md): accounts and data on https://opentexila.site.
+- [Docker guide](docs/DOCKER.md): production image, hot reload and backend connections.
+- [Frontend structure and conventions](docs/README.md) and [decision records](docs/adr/).
+
 For shared styling, use the [OpenTexila design system](docs/DESIGN_SYSTEM.md). Run `npm run dev` and visit `/style-guide` for live examples using the same CSS as the app. Each member should reuse these patterns and keep feature CSS scoped.
 
-See [frontend structure and conventions](docs/README.md). API documentation is maintained in the backend repository under `docs/api/`; add a repository URL when it is published rather than copying endpoint definitions here.
+API documentation is maintained in the backend repository under `docs/api/`; do not copy endpoint definitions here.
 
-Tests use Node’s built-in test runner; no additional test dependency is needed. Deployment integration is not implemented.
+Tests use Node’s built-in test runner; no additional test dependency is needed. See [tests/README.md](tests/README.md). The production build is deployed at https://opentexila.site with the Docker setup above.
