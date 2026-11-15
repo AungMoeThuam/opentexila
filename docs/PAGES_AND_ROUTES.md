@@ -1,8 +1,8 @@
 # Frontend pages and routes
 
-Proposed page catalogue — updated 29 October 2026. This documents the target structure for planning and assigning work. Most existing feature routes are placeholders, and the role-prefixed migration has not been implemented.
+Page catalogue as built, checked against the route files in `src/features/*/routes.js` on 15 November 2026. It lists every route, who may open it and which backend endpoints it uses. The detailed sections after the tables describe the larger features (map editor, session attendance settings, class attendance, class sessions and announcements).
 
-The initial scope is authentication, enrolments and attendance. The wider catalogue below lists possible pages, not a requirement to build every page for the assignment.
+The three roles are `student`, `lecturer` and `admin`. Router guards control navigation only; the backend independently enforces roles, assigned-class access and student membership. Routes are registered in `src/router/index.js` under `PublicLayout` (guests) or `AppLayout` (signed in).
 
 ## Conventions
 
@@ -17,8 +17,6 @@ The initial scope is authentication, enrolments and attendance. The wider catalo
 - Router guards control navigation. APIs must independently enforce roles, assigned-class access and student membership.
 - Keep source code organised by feature. Different role routes can reuse components with appropriate permissions.
 
-**Core** means first milestone. **Next** means a later expansion. **Optional** means a candidate requiring a scope decision. Existing shared and development pages are identified separately.
-
 ## Database-to-route mapping
 
 | Browser parameter | Database identifier |
@@ -26,118 +24,114 @@ The initial scope is authentication, enrolments and attendance. The wider catalo
 | `classId`         | `classes.id`        |
 | `classSessionId`  | `class_sessions.id` |
 
-Backend foreign keys are `class_id` and `class_session_id`. `enrolments` uses composite primary key `(class_id, student_id)` and `attendance_records` uses composite primary key `(class_session_id, student_id)`. Frontend code should map agreed API response fields explicitly. Authentication session identifiers (`auth_sessions`) are unrelated and must not be used as resource IDs. Route paths in this catalogue remain proposals; the database refactor does not change Vue routes.
+Backend foreign keys are `class_id` and `class_session_id`. `enrolments` uses composite primary key `(class_id, student_id)` and `attendance_records` uses composite primary key `(class_session_id, student_id)`. Frontend code should map agreed API response fields explicitly. Authentication session identifiers (`auth_sessions`) are unrelated and must not be used as resource IDs. The database identifiers do not appear in route names; routes use `classId` and `classSessionId`.
 
 Class-session times and cancellation are authoritative. Account role is `student`/`lecturer`/`admin`; account status is `active`/`inactive`; class session state is `scheduled`/`cancelled`; attendance status is `pending`/`present`/`late`/`absent`. All four database columns are ENUMs. UI availability such as upcoming/in-progress/ended is derived; it is not another stored class state.
 
-## Backend route conventions and first-milestone mapping
+## Backend endpoints used
 
-The following backend endpoints are **proposed, not implemented**. Paths are relative to `/api/v1`. Backend documentation owns payloads, errors and permissions; this table maps the frontend workflows for issue planning.
+All paths are relative to `/api/v1`. Backend documentation in `backend/docs/api/` owns payloads, errors and permissions; this table maps the frontend pages to the endpoints they call. `/me` always means the authenticated user, never a client-supplied user ID.
 
-| Workflow / frontend page                             | Backend endpoints                                                                                                         |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `/student/classes`                                   | `GET /me/classes`                                                                                                         |
-| `/admin/enrolments`                                  | `GET /classes`                                                                                                            |
-| `/admin/enrolments/:classId`                         | `GET /classes/:classId/enrolments`, `POST /classes/:classId/enrolments`, `DELETE /classes/:classId/enrolments/:studentId` |
-| `/lecturer/classes/:classId/students`                | `GET /classes/:classId/enrolments` (read-only, assigned classes)                                                          |
-| `/student/attendance`                                | `GET /me/class-sessions`                                                                                                  |
-| `/student/attendance/class-sessions/:classSessionId` | `GET /class-sessions/:classSessionId`, `POST /class-sessions/:classSessionId/check-ins`                                   |
-| `/student/attendance/history`                        | `GET /me/attendance-records`                                                                                              |
-| `/lecturer/attendance`                               | `GET /me/class-sessions` (assigned classes)                                                                               |
-| `/lecturer/class-sessions/:classSessionId`           | `GET /class-sessions/:classSessionId/records`                                                                             |
-| `/lecturer/analytics`                                | `GET /lecturer/attendance-analytics` (proposed)                                                                           |
+| Workflow / frontend page                                                     | Backend endpoints                                                                                                         |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Sign-in, sign-out, session check, password change                            | `GET /auth/csrf`, `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`, `POST /auth/change-password`                   |
+| `/admin/invitations` (create account and user list)                          | `POST /admin/users`, `GET /admin/users`, `POST /admin/users/:userId/reset-password`                                       |
+| `/student/classes`, `/my-classes`, `/lecturer/classes`                       | `GET /me/classes`                                                                                                         |
+| `/admin/enrolments`                                                          | `GET /classes`                                                                                                            |
+| `/admin/enrolments/:classId`                                                 | `GET /classes/:classId/enrolments`, `POST /classes/:classId/enrolments`, `DELETE /classes/:classId/enrolments/:studentId` |
+| `/lecturer/classes/:classId/students`                                        | `GET /classes/:classId/enrolments` (read-only, assigned classes)                                                          |
+| `/student/attendance`, `/lecturer/attendance`                                | `GET /me/class-sessions`                                                                                                  |
+| `/student/attendance/class-sessions/:classSessionId`                         | `GET /class-sessions/:classSessionId`, `POST /class-sessions/:classSessionId/check-ins`                                   |
+| `/student/attendance/history`, `/attendance/history`                         | `GET /me/attendance-records`, `GET /me/attendance-records/classes`                                                        |
+| `/lecturer/class-sessions/:classSessionId`, `/attendance/class-sessions/:id` | `GET /class-sessions/:classSessionId/records`                                                                             |
+| `/lecturer/analytics`                                                        | `GET /lecturer/attendance-analytics`                                                                                      |
+| `/attendance/classes` (admin class attendance)                               | `GET /classes`, `GET /classes/:classId/class-sessions`                                                                    |
+| `/admin/courses`, `/admin/courses/new`, `/admin/courses/:courseId/edit`      | `GET /courses`, `POST /courses`, `PATCH /courses/:courseId`                                                               |
+| `/admin/classes`, `/admin/classes/new`, `/admin/classes/:classId/edit`       | `GET /classes`, `POST /classes`, `GET /classes/:classId`, `PATCH /classes/:classId`, `GET /lecturers`                     |
+| `/admin/classes/:classId/schedule`, `.../schedule/new`                       | `GET /classes/:classId/class-sessions`, `POST /classes/:classId/class-sessions`, `POST /class-sessions/:id/cancel`        |
+| `/admin/classes/:classId/attendance-settings`                                | `PATCH /class-sessions/:classSessionId/attendance-policy`                                                                 |
+| `/admin/timetable`                                                           | `GET /class-sessions`, `PATCH /class-sessions/batch`                                                                      |
+| Announcement feeds, forms and details (all roles)                            | See [Announcements](#announcements)                                                                                       |
 
-`GET /me/classes` can serve enrolled students and assigned lecturers using the authenticated user's role. `/me` always means the authenticated user, never a client-supplied user ID. Enrolment mutations are administrator-only in the initial scope. `DELETE /classes/:classId/enrolments/:studentId` removes an enrolment; existing attendance records remain because they reference `users.id` directly. Exact request bodies remain to be agreed before implementation.
-
-Later scheduling routes use `GET`/`POST /classes/:classId/class-sessions` and `PATCH /class-sessions/:classSessionId`. Collection filters belong in query parameters. Authentication uses `/auth/login`, `/auth/logout`, `/auth/me`, `/auth/csrf` and `/auth/change-password`.
-
-The implemented development sample remains `/examples/classrooms` for compatibility. It is not the proposed production `/classes` endpoint. Changing these documents does not rename the sample API or Vue scaffold routes.
+Collection filters belong in query parameters. The development sample `GET /examples/classrooms` is not used by any page.
 
 ## Public and shared pages
 
-| Route                  | Page or behaviour                                                       | Access                             | Priority             |
-| ---------------------- | ----------------------------------------------------------------------- | ---------------------------------- | -------------------- |
-| `/`                    | Redirect guests to login and signed-in users to their role landing page | Everyone                           | Core                 |
-| `/login`               | Sign in                                                                 | Guests                             | Core                 |
-| `/change-password`     | Change temporary or current password (`must_change_password` flow)      | Signed-in users                    | Core                 |
-| `/forbidden`           | Explain denied access                                                   | Signed-in users                    | Existing shared page |
-| `/session-unavailable` | Explain session verification failure and allow retry                    | Everyone                           | Existing shared page |
-| `/:pathMatch(.*)*`     | Not found fallback                                                      | Everyone                           | Existing shared page |
-| `/style-guide`         | Shared styling and component reference                                  | Development only                   | Existing             |
-| `/dev/example`         | Shared UI and API-client usage examples                                 | Signed-in development/mock session | Existing             |
+| Route                  | Route name            | Page or behaviour                                                             | Access                  |
+| ---------------------- | --------------------- | ----------------------------------------------------------------------------- | ----------------------- |
+| `/`                    | `home`                | Landing page for guests; signed-in users are redirected to their role home    | Everyone                |
+| `/login`               | `login`               | Sign in                                                                       | Guests only             |
+| `/activate`            | `activate`            | Change the temporary or current password (`must_change_password` flow)        | Signed-in users         |
+| `/forbidden`           | `forbidden`           | Explain denied access (a wrong-role page shows this; a 403 does not sign out) | Signed-in users         |
+| `/session-unavailable` | `session-unavailable` | Explain session verification failure and allow retry                          | Everyone                |
+| `/:pathMatch(.*)*`     | `not-found`           | Not found page                                                                | Everyone                |
+| `/style-guide`         | `style-guide`         | Shared styling and component reference                                        | Development builds only |
+| `/dev/example`         | `example`             | Shared UI and API-client usage examples                                       | Development builds only |
 
-There is no public student or lecturer registration page in the initial plan. Administrators create accounts with a temporary password (`must_change_password = true`), and users change their password on first login.
+There is no public registration. Administrators create accounts with a temporary password (`must_change_password = true`), and the route guard sends a user with that flag to `/activate` until the password is changed.
 
 ## Student pages
 
-All routes require the student role. Class information and attendance must be scoped to the signed-in student's permitted records.
+All routes require the student role. The sidebar shows Home, My classes, Announcements, and an Attendance group with Scheduled classes and My history.
 
-| Route                                                | Page and purpose                           | Priority                 |
-| ---------------------------------------------------- | ------------------------------------------ | ------------------------ |
-| `/student/dashboard`                                 | Overview of today's classes and attendance | Next; redirect initially |
-| `/student/classes`                                   | List enrolled classes                      | Core                     |
-| `/student/classes/:classId`                          | Class details, course, lecturer and term   | Next                     |
-| `/student/classes/:classId/schedule`                 | Scheduled sessions for one class           | Next                     |
-| `/student/timetable`                                 | Combined timetable across enrolled classes | Next                     |
-| `/student/attendance`                                | Today's classes and check-in availability  | Core                     |
-| `/student/attendance/class-sessions/:classSessionId` | Location-based check-in and result         | Core                     |
-| `/student/attendance/history`                        | Own attendance records and filters         | Core                     |
-| `/student/profile`                                   | Own profile and account settings           | Next                     |
+| Route                                                              | Route name                                         | Page and purpose                                                     |
+| ------------------------------------------------------------------ | -------------------------------------------------- | -------------------------------------------------------------------- |
+| `/student/home`                                                    | `student-home`                                     | Today's classes (sessions that start today) with a check-in shortcut |
+| `/student/classes`, `/my-classes`                                  | `student-classes`, `my-classes`                    | Enrolled classes (both paths open the same page)                     |
+| `/student/attendance`                                              | `student-attendance`                               | Scheduled classes: sessions with status and the student's attendance |
+| `/student/attendance/class-sessions/:classSessionId`               | `student-class-session-check-in`                   | Location-based check-in and result                                   |
+| `/student/attendance/history`, `/attendance/history`               | `student-attendance-history`, `attendance-history` | Own attendance records with filters (both paths open the same page)  |
+| `/student/announcements`, `/student/announcements/:announcementId` | `student-announcements`, `student-announcement`    | Announcement feed and detail with likes and comments                 |
 
-The check-in page uses `classSessionId`. Check-in becomes available at the scheduled start and remains available until the class ends. Students allow location access and submit check-in; the backend validates eligibility, time and location. No lecturer opening action or session code is part of this flow.
+The check-in page uses `classSessionId`. Check-in is available from the scheduled start until the class ends. The student allows location access and submits the check-in; the server validates enrolment, time, location accuracy and distance, and decides Present or Late. Raw coordinates are not stored. See [Student attendance](STUDENT_ATTENDANCE.md).
 
 ## Lecturer pages
 
-All routes require the stored `lecturer` role. Lecturers only access classes assigned to them.
+All routes require the lecturer role. Lecturers only reach classes assigned to them. The sidebar shows Home, My classes, Announcements, Attendance and Analytics.
 
-| Route                                                       | Page and purpose                                              | Priority                 |
-| ----------------------------------------------------------- | ------------------------------------------------------------- | ------------------------ |
-| `/lecturer/dashboard`                                       | Overview of assigned classes and attendance                   | Next; redirect initially |
-| `/lecturer/classes`                                         | List assigned classes                                         | Next                     |
-| `/lecturer/classes/:classId`                                | Assigned class details                                        | Next                     |
-| `/lecturer/classes/:classId/students`                       | Read the class's enrolled-student roster                      | Core                     |
-| `/lecturer/classes/:classId/schedule`                       | View class sessions                                           | Next                     |
-| `/lecturer/timetable`                                       | Combined timetable of assigned classes                        | Next                     |
-| `/lecturer/attendance`                                      | Select assigned classes and sessions; open attendance rosters | Core                     |
-| `/lecturer/attendance/classes/:classId`                     | Class attendance summary and session list                     | Next                     |
-| `/lecturer/class-sessions/:classSessionId`                  | Attendance roster for one class session                       | Core                     |
-| `/lecturer/attendance/classes/:classId/students/:studentId` | One student's attendance within that class                    | Next                     |
-| `/lecturer/attendance/reports`                              | Filter and export permitted attendance data                   | Optional                 |
-| `/lecturer/profile`                                         | Own profile and account settings                              | Next                     |
-
-The core attendance overview links directly to class session rosters by `classSessionId`.
+| Route                                                             | Route name                           | Page and purpose                                                 |
+| ----------------------------------------------------------------- | ------------------------------------ | ---------------------------------------------------------------- |
+| `/lecturer/home`                                                  | `lecturer-home`                      | Today's and upcoming sessions and quick-access cards             |
+| `/lecturer/classes`                                               | `lecturer-classes`                   | Assigned classes                                                 |
+| `/lecturer/classes/:classId/students`                             | `lecturer-class-students`            | Read-only roster of one class                                    |
+| `/lecturer/attendance`                                            | `lecturer-attendance`                | Class sessions with filters; open an attendance roster           |
+| `/lecturer/class-sessions/:classSessionId`                        | `lecturer-class-session-records`     | Attendance roster for one session, with status filter and paging |
+| `/lecturer/analytics`                                             | `lecturer-analytics`                 | Attendance analytics with charts and table alternatives          |
+| `/lecturer/announcements` and its `new`, `:id`, `:id/edit` routes | `lecturer-announcements` and related | Feed, create, edit, detail and comment moderation                |
 
 ## Administrator pages
 
-All routes require the admin role. Initial enrolment management assigns existing students to existing classes; seeded courses, classes and class sessions can support the first milestone.
+All routes require the admin role. The sidebar shows Home, Courses, Classes, Timetable, Enrolments, Announcements, Class attendance and Create account.
 
-| Route                                                    | Page and purpose                                                         | Priority                 |
-| -------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------ |
-| `/admin/dashboard`                                       | Institution overview                                                     | Next; redirect initially |
-| `/admin/users`                                           | Create accounts with temporary passwords, reset passwords, manage        | Core                     |
-| `/admin/users/:userId`                                   | View account details                                                     | Next                     |
-| `/admin/users/:userId/edit`                              | Edit supported account fields and status                                 | Next                     |
-| `/admin/courses`                                         | List courses                                                             | Next                     |
-| `/admin/courses/new`                                     | Create a course                                                          | Next                     |
-| `/admin/courses/:courseId/edit`                          | Edit course code and name                                                | Next                     |
-| `/admin/classes`                                         | List classes by course and term                                          | Next                     |
-| `/admin/classes/new`                                     | Create a class with its course, term, section, lecturer and map location | Built                    |
-| `/admin/classes/:classId`                                | View class details                                                       | Next                     |
-| `/admin/classes/:classId/edit`                           | Edit class details and the map location and radius                       | Built                    |
-| `/admin/classes/:classId/schedule`                       | List a class's sessions, filter by state, cancel a session               | Built                    |
-| `/admin/classes/:classId/schedule/new`                   | Schedule a class session                                                 | Built                    |
-| `/admin/class-sessions/:classSessionId`                  | View class session details, status and roster                            | Next                     |
-| `/admin/class-sessions/:classSessionId/edit`             | Edit a session subject to backend timing restrictions                    | Next                     |
-| `/admin/enrolments`                                      | Select a class to manage enrolments                                      | Core                     |
-| `/admin/enrolments/:classId`                             | View roster, add students and remove enrolments                          | Core                     |
-| `/admin/users/:userId/enrolments`                        | Inspect a student's class memberships                                    | Next                     |
-| `/admin/attendance`                                      | Institution-wide attendance overview                                     | Next                     |
-| `/admin/attendance/classes/:classId`                     | Class attendance summary and sessions                                    | Next                     |
-| `/admin/attendance/classes/:classId/students/:studentId` | Student attendance within a class                                        | Next                     |
-| `/admin/attendance/reports`                              | Filter and export attendance data                                        | Optional                 |
-| `/admin/profile`                                         | Own profile and account settings                                         | Next                     |
+| Route                                                  | Route name                                  | Page and purpose                                                                      |
+| ------------------------------------------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `/admin/home`                                          | `admin-home`                                | Institution overview, today's sessions and counts                                     |
+| `/admin/invitations`                                   | `invitations`                               | Create account (sidebar: Create account) and the searchable user list                 |
+| `/admin/courses`                                       | `admin-courses`                             | List, search and sort courses                                                         |
+| `/admin/courses/new`, `/admin/courses/:courseId/edit`  | `admin-course-new`, `admin-course-edit`     | Create and edit a course                                                              |
+| `/admin/classes`                                       | `admin-classes`                             | List classes by course and term                                                       |
+| `/admin/classes/new`, `/admin/classes/:classId/edit`   | `admin-class-new`, `admin-class-edit`       | Create and edit a class, with map location and radius                                 |
+| `/admin/classes/:classId/schedule`                     | `admin-class-schedule`                      | List a class's sessions, filter by state, cancel a session                            |
+| `/admin/classes/:classId/schedule/new`                 | `admin-class-session-new`                   | Schedule a class session, with clash warnings                                         |
+| `/admin/classes/:classId/attendance-settings`          | `admin-class-attendance-settings`           | Change one session's room, location, radius and late allowance                        |
+| `/admin/timetable`                                     | `admin-timetable`                           | Weekly timetable with drag-and-drop rescheduling and conflict checks                  |
+| `/admin/enrolments`                                    | `admin-enrolments`                          | Choose a class to manage enrolments                                                   |
+| `/admin/enrolments/:classId`                           | `admin-class-enrolments`                    | View the roster, add students and remove enrolments                                   |
+| `/attendance/classes`                                  | `class-attendance`                          | Read-only attendance by class (see [Admin class attendance](#admin-class-attendance)) |
+| `/attendance/class-sessions/:classSessionId`           | `admin-class-session-records`               | Read-only attendance roster for one session                                           |
+| `/admin/announcements` and its `:announcementId` route | `admin-announcements`, `admin-announcement` | All announcements; detail with comment and post deletion                              |
 
-Administrator attendance pages can reuse lecturer attendance components with administrator access rules. Session details and class-scoped student attendance are supporting destinations, not additional first-milestone requirements.
+Admins create accounts and manage enrolments. A lecturer's roster is read-only, and neither role can change attendance by hand.
+
+## Not built
+
+These pages were planned but do not exist. Do not link to them.
+
+- Detail pages for classes, courses, users and sessions (`/student/classes/:classId`, `/lecturer/classes/:classId`, `/admin/classes/:classId`, `/admin/users/:userId`).
+- Profile pages (`/student/profile`, `/lecturer/profile`, `/admin/profile`).
+- Per-role timetables for students and lecturers, and an institution-wide attendance overview or reports with export.
+- Student self-enrolment (`/student/available-classes`, `/student/enrolment-requests`). Enrolment stays administrator-managed.
+- The `assignments`, `classrooms`, `resources` and `users` feature folders are empty.
 
 ## Actions and states that do not need separate pages
 
@@ -150,7 +144,7 @@ Use dialogs, tabs or inline states for:
 - Check-in results: permission denied, location unavailable or inaccurate, outside the allowed area, accepted, not started, ended or cancelled.
 - Loading, empty results, validation errors, API failures and success messages.
 
-Manual attendance awards, session-code entry and lecturer-controlled opening are outside the planned automatic check-in flow.
+Manual attendance awards, session-code entry and lecturer-controlled opening are not part of the automatic check-in flow.
 
 Use query parameters for filters rather than creating more pages, for example:
 
@@ -160,30 +154,9 @@ Use query parameters for filters rather than creating more pages, for example:
 /admin/classes?courseId=1&term=2026-S2
 ```
 
-## Optional student self-enrolment
+## Role home pages
 
-Self-enrolment policy is not settled. The initial scope uses administrator-managed enrolments. Only add these routes if the team agrees on eligibility, capacity and whether approval is needed:
-
-| Route                         | Possible purpose                                      |
-| ----------------------------- | ----------------------------------------------------- |
-| `/student/available-classes`  | Browse eligible classes and join or request enrolment |
-| `/student/enrolment-requests` | Track requests if an approval workflow is introduced  |
-
-An approval workflow needs additional backend and database design. The team must also decide whether a student may join multiple sections of the same course in one term.
-
-## Proposed first-milestone ownership
-
-Each member builds their frontend pages and related backend APIs. This is a planning proposal; effort should be balanced by workflow complexity rather than page count.
-
-| Member       | Feature                        | Core routes and coordination                                                                                                                                                   |
-| ------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Aung Moe Thu | Authentication and integration | `/login`, `/change-password`, `/admin/users`; coordinate access guards, role redirects and shared navigation                                                                   |
-| Kar You Chia | Enrolments                     | `/student/classes`, `/admin/enrolments`, `/admin/enrolments/:classId`, `/lecturer/classes/:classId/students`                                                                   |
-| Show Wai Yan | Attendance                     | `/student/attendance`, `/student/attendance/class-sessions/:classSessionId`, `/student/attendance/history`, `/lecturer/attendance`, `/lecturer/class-sessions/:classSessionId` |
-
-Use seeded courses, classes, users and class sessions initially. Shared error pages already exist. Agree API request/response contracts and mock data before parallel implementation so page development can proceed independently.
-
-Each role has its own home page (feature `src/features/dashboard/`). The pages are placeholders until their content issues land. `homeForRole()` returns these paths, and a signed-in user opening `/` is redirected to theirs:
+Each role has its own home page in `src/features/dashboard/`. `homeForRole()` returns these paths, and a signed-in user opening `/` is redirected to theirs:
 
 | Role     | Home route       | Route name      |
 | -------- | ---------------- | --------------- |
@@ -191,7 +164,9 @@ Each role has its own home page (feature `src/features/dashboard/`). The pages a
 | Lecturer | `/lecturer/home` | `lecturer-home` |
 | Admin    | `/admin/home`    | `admin-home`    |
 
-The admin home page (`AdminHomePage.vue`) greets the signed-in admin and links to Courses, Classes, Enrolments, Class attendance and Create account. The Courses and Classes cards show their totals, read from the existing `GET /courses` and `GET /classes` lists (one row per request, only `meta.total` is used). If the totals do not load, the page shows an error with **Try again**, and the shortcuts still work. With no courses and no classes it says nothing is set up yet.
+The student home lists today's classes: the sessions that **start** today, in the browser's local time. A session that started on an earlier day and is still open does not appear there; **Attendance → Scheduled classes** lists it. Each card shows the session's availability, not the student's own attendance result.
+
+The admin home page (`AdminHomePage.vue`) greets the signed-in admin, shows today's sessions and links to Courses, Classes, Enrolments, Class attendance and Create account. The Courses and Classes cards show their totals, read from the existing `GET /courses` and `GET /classes` lists (one row per request, only `meta.total` is used). If the totals do not load, the page shows an error with **Try again**, and the shortcuts still work. With no courses and no classes it says nothing is set up yet.
 
 ## Class location editor
 
@@ -253,33 +228,24 @@ The detail page (`AnnouncementDetailPage.vue`) serves all three roles. It shows 
 
 The form (`AnnouncementFormPage.vue`) has two modes. **Create** has Class (the lecturer's own classes, from `GET /me/classes`), Category, Title and Body, and posts to `POST /classes/:classId/announcements`. `?classId=` chooses the class at the start; an unknown or foreign class is ignored. **Edit** shows the class as text, because a post cannot change class, and sends only the changed fields with `PATCH /announcements/:announcementId`. **Delete announcement** asks for confirmation and calls `DELETE /announcements/:announcementId`. After a save the lecturer goes to the feed (after a create, filtered to the post's class). A 404 shows "not found", a 403 shows the forbidden page, and the typed text stays when a save fails.
 
-## Existing scaffold versus planned routes
+## Legacy routes and redirects
 
-The following table is a migration plan, not a claim that these changes are implemented.
+Some older paths still exist:
 
-| Existing route                                       | Proposed destination or change                                                    |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `/`                                                  | Replace welcome page with guest/role landing redirect                             |
-| `/login`                                             | Keep path; replace feature placeholder                                            |
-| `/activate`, `/admin/invitations`                    | Replace with `/change-password` and `/admin/users`                                |
-| `/my-classes`                                        | `/student/classes`                                                                |
-| `/enrolments`                                        | `/admin/enrolments`; lecturer class browsing later uses `/lecturer/classes`       |
-| `/enrolments/:classId`                               | Split into `/admin/enrolments/:classId` and `/lecturer/classes/:classId/students` |
-| `/attendance`                                        | `/student/attendance`                                                             |
-| `/attendance/meetings/:meetingId`                    | `/student/attendance/class-sessions/:classSessionId`                              |
-| `/attendance/history`                                | `/student/attendance/history`                                                     |
-| `/attendance/classes`                                | `/lecturer/attendance` and later `/admin/attendance`                              |
-| `/attendance/sessions/:sessionId`                    | `/lecturer/class-sessions/:classSessionId` and later the administrator equivalent |
-| Shared error pages, catch-all and development routes | Keep existing paths                                                               |
+| Route                                 | Behaviour                                                                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `/attendance`                         | Redirects to `/student/attendance`                                                                                                    |
+| `/attendance/meetings/:meetingId`     | Redirects to `/student/attendance/class-sessions/:classSessionId`                                                                     |
+| `/my-classes`, `/attendance/history`  | Still in use by the student sidebar; they open the same pages as the `/student/...` paths                                             |
+| `/activate`, `/admin/invitations`     | Current paths for the password change page and the admin Create account page                                                          |
+| `/enrolments`, `/enrolments/:classId` | Placeholder pages (`FeaturePlaceholder`) for admin and lecturer; the real pages are under `/admin/enrolments` and `/lecturer/classes` |
 
-When implementing the migration, update feature route definitions, unique route names, role-home resolution, sidebar links, mock role switching, redirects and affected tests together. If old URLs are retained as redirects, resolve them according to role and reapply access checks.
+When changing a route, update its definition, unique route name, `homeForRole()`, sidebar links, redirects and the affected tests together. If old URLs are kept as redirects, resolve them by role and apply the access checks again.
 
-## Implementation dependencies
+## Implementation notes
 
-- Reuse roster, profile, schedule and attendance components where behaviour is shared. Keep business logic within its feature rather than duplicating it by role.
-- Timetables are derived from `class_sessions`, joined with class, course and lecturer data; student timetables are filtered through enrolments. There is no separate recurring timetable table. A recurring-session generator is additional scope.
-- Existing database schemas do not mean every listed API exists. Build and verify the endpoints required for each selected workflow.
-- The shared authentication and API-client foundation defines the session/CSRF integration pattern. Development mock users do not provide real authentication or attendance.
-- Reports, password reset, enrolment approval and recurring scheduling remain optional work requiring explicit planning.
+- Reuse roster and attendance components where behaviour is shared. Keep business logic within its feature rather than duplicating it by role.
+- Timetables are derived from `class_sessions`, joined with class, course and lecturer data. There is no separate recurring timetable table.
+- The shared authentication and API-client foundation defines the session and CSRF pattern. Development mock users do not provide real authentication or attendance.
 
-See [Frontend foundation](FRONTEND_FOUNDATION.md) for current integration patterns, [Design system](DESIGN_SYSTEM.md) for shared styling, and [Docker setup](DOCKER.md) for local running instructions.
+See [Frontend foundation](FRONTEND_FOUNDATION.md) for integration patterns, [Design system](DESIGN_SYSTEM.md) for shared styling, [Docker setup](DOCKER.md) for local running and [Hosted demo accounts](PRODUCTION_DEMO_ACCOUNTS.md) for the live site.

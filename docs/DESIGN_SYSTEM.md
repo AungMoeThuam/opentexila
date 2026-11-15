@@ -161,7 +161,7 @@ Place this inside the layout’s existing page wrapper; do not nest two `.ot-pag
 Signed-in pages render inside `AppLayout`. Do not add your own header or sidebar; your page fills the content area, which already provides the `.ot-page` wrapper.
 
 - **Sidebar:** navy, with an icon and label per item. The active item is a red pill, and groups such as Attendance expand to show sub-pages. From 992px the menu button collapses it to icons (remembered in the browser). Below 992px it opens as a drawer; Escape or the backdrop closes it.
-- **Top bar:** white with a menu button and a user placeholder that authentication will fill in. `.ot-search` (page search) and `.ot-icon-btn__dot` (unread dot for a bell) are available for the shell; feature pages do not use them.
+- **Top bar:** white with a menu button and the signed-in user's name and role with a Sign out button. `.ot-search` (page search) and `.ot-icon-btn__dot` (unread dot for a bell) are available for the shell; feature pages do not use them.
 - **Add a page:** add a child route to the `AppLayout` route in `src/router/index.js`, and an item in `src/layouts/navigation.js` if it needs a menu entry. Menu changes are shared-file changes, so follow the process below.
 - **Icons:** only the inline set in `AppIcon.vue`. Add icons there, not from another library.
 - **Access:** role-based menu filtering and route guards use the shared auth state. The top bar reads the same user and provides sign-out. Actual authentication backend endpoints and feature pages are still pending.

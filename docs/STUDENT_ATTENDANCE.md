@@ -5,7 +5,7 @@ Implemented routes:
 - `/student/attendance` (`student-attendance`): paginated scheduled sessions.
 - `/student/attendance/class-sessions/:classSessionId` (`student-class-session-check-in`): session eligibility and geolocation check-in.
 
-The existing `/attendance` and `/attendance/meetings/:meetingId` URLs redirect to these student-only routes. The student sidebar now links to Scheduled classes. Other attendance placeholders are unchanged.
+The existing `/attendance` and `/attendance/meetings/:meetingId` URLs redirect to these student-only routes. The student sidebar links to Scheduled classes and My history. The lecturer and admin attendance pages are described in [Pages and routes](PAGES_AND_ROUTES.md).
 
 Pages use the shared cookie/CSRF client and the backend `docs/api/attendance.md` contract. Eligibility and attendance status come from the server. Refresh retrieves current eligibility when a class starts or ends. Each explicit check-in attempt requests one fresh location reading; requests are not automatically replayed. Leaving the page prevents a pending location callback from submitting a check-in.
 
@@ -26,4 +26,4 @@ For end-to-end verification, start the backend Docker stack with `FRONTEND_MOCK_
 - Repeated clicks while finding location/submitting; leaving the route while location is pending.
 - Server eligibility changing between detail load and submission; explicit refresh after a session begins.
 
-Initial implementation checks passed locally. Browser smoke checks confirmed both routes and mock-mode error handling. Full Docker/API and populated responsive verification remain outstanding: the Docker daemon was unavailable, and the checked-in backend specification marks attendance endpoints as planned.
+The attendance endpoints are implemented; the contract is in backend `docs/api/attendance.md`. To try the pages against real data without the backend, use `npm run dev:live` (see the [README](../README.md)). The hosted demo has a live class, DEMO101-A, that accepts a check-in from any location; see [Hosted demo accounts](PRODUCTION_DEMO_ACCOUNTS.md).

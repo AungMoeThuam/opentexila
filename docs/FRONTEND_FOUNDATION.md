@@ -1,10 +1,10 @@
 # Shared frontend foundation
 
-For the proposed `/student`, `/lecturer` and `/admin` page structure, see [Pages and routes](PAGES_AND_ROUTES.md). Paths in this foundation guide describe the existing scaffold; the role-prefix migration has not been implemented.
+For the list of pages, routes and endpoints, see [Pages and routes](PAGES_AND_ROUTES.md). Pages use the `/student`, `/lecturer` and `/admin` prefixes.
 
-Start here before implementing authentication, enrolments or attendance pages. The theme stays red/navy, Bootstrap 5 and JavaScript. This foundation supplies integration patterns; feature pages and backend business rules still need implementation.
+Start here before changing shared code or adding a page. The theme stays red/navy, Bootstrap 5 and JavaScript. This guide describes the integration patterns that all features share: layouts, route guards, identity, the API client and the reusable UI components.
 
-The backend names its entities `Course`, `Class`, `Enrolment`, `ClassSession` and `AttendanceRecord`. Existing scaffold parameters `classId` and `meetingId` / `sessionId` refer to `classes.id` (`classId`) and `class_sessions.id` (`classSessionId`). They do not refer to login sessions. New routes in the page catalogue use `classId` and `classSessionId`, with matching kebab-case resource paths (`classes` and `class-sessions`). No router changes are included in this documentation update.
+The backend names its entities `Course`, `Class`, `Enrolment`, `ClassSession` and `AttendanceRecord`. The route parameters `classId` and `classSessionId` refer to `classes.id` and `class_sessions.id`. They do not refer to login sessions. New routes use `classId` and `classSessionId`, with matching kebab-case resource paths (`classes` and `class-sessions`). The `meetingId` name survives only in a legacy redirect.
 
 ## Run without the backend
 
@@ -14,21 +14,23 @@ The backend names its entities `Course`, `Class`, `Enrolment`, `ClassSession` an
 4. Use the yellow development toolbar to select Student, Lecturer or Admin.
 5. Open **Example page** (`/dev/example`) and **Style guide** (`/style-guide`).
 
-Mock mode is explicit, development-only and blocked from using the shared live API client. It never sends a fake identity to the backend. Only the selected fixture role is saved in sessionStorage for that browser tab; passwords and tokens are not saved. The example roster uses fictional browser-memory records and resets on reload. Actual feature routes show honest placeholders until their owners implement them.
+To use real data without running the backend, run `npm run dev:live` instead. It sends API requests to the hosted server at https://opentexila.site; see the [README](../README.md#run-against-the-live-server-no-docker-no-backend).
+
+Mock mode is explicit, development-only and blocked from using the shared live API client. It never sends a fake identity to the backend. Only the selected fixture role is saved in sessionStorage for that browser tab; passwords and tokens are not saved. The example roster uses fictional browser-memory records and resets on reload. Mock mode blocks live API calls, so pages that need the API show an error or an explanation, never fictional data presented as real records.
 
 To integrate with the backend, set the flag to `false` and restart Vite. A backend outage or missing `/auth/me` endpoint shows a session-service error with retry, not a fake authenticated user. Production builds ignore the mock flag and exclude the role toolbar, mock-session adapter, example page and style-guide routes. Mock IDs are not seed IDs and must never be used in live requests.
 
 ## Ownership and routes
 
-| Owner / feature               | Route file                          | Initial page slots                                                                                                                                                 |
-| ----------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Aung Moe Thu / authentication | `src/features/auth/routes.js`       | `/login`, `/change-password`, `/admin/users`                                                                                                                       |
-| Kar You Chia / enrolments     | `src/features/enrolments/routes.js` | `/my-classes`, `/enrolments`, `/enrolments/:classId`                                                                                                               |
-| Show Wai Yan / attendance     | `src/features/attendance/routes.js` | `/attendance`, `/attendance/meetings/:meetingId`, `/attendance/history`, `/attendance/classes`, `/lecturer/attendance`, `/lecturer/class-sessions/:classSessionId` |
+| Owner / feature               | Route file                          | Main routes                                                                                                                                                              |
+| ----------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Aung Moe Thu / authentication | `src/features/auth/routes.js`       | `/login`, `/activate`, `/admin/invitations`                                                                                                                              |
+| Kar You Chia / enrolments     | `src/features/enrolments/routes.js` | `/student/classes`, `/lecturer/classes`, `/admin/enrolments`, `/admin/enrolments/:classId`, `/lecturer/classes/:classId/students`                                        |
+| Show Wai Yan / attendance     | `src/features/attendance/routes.js` | `/student/attendance`, `/student/attendance/class-sessions/:classSessionId`, `/attendance/history`, `/lecturer/attendance`, `/lecturer/analytics`, `/attendance/classes` |
 
-These follow the proposed team division; coordinate if assignments change. Each member owns their pages and related backend APIs. Aung coordinates shared changes. Student self-enrolment remains undecided; there is no Browse/Enrol action in this foundation. Lecturer access to enrolment pages is for reading rosters; API permissions must restrict writes to authorized users.
+Courses and classes (`courses/`), the admin timetable (`scheduling/`), announcements (`announcements/`) and the role home pages (`dashboard/`) have their own route files. Each member owns their pages and related backend APIs, and Aung coordinates shared changes. Student self-enrolment is not built, and enrolment stays administrator-managed. Lecturer access to enrolment pages is for reading rosters; API permissions must restrict writes to authorized users.
 
-Replace a route's `component: page` with a lazy import of your own page, for example `component: () => import('./pages/MyClassesPage.vue')`, and remove placeholder `props`. Keep its route name and `meta.roles`. These route paths are **UI paths**, not endpoint definitions.
+A new page is a lazy import in its feature's route file, for example `component: () => import('./pages/MyClassesPage.vue')`, with a unique route name and `meta.roles`. Only the generic `enrolments` routes still use the shared `FeaturePlaceholder` page. When you replace a page, keep its route name and `meta.roles`. These route paths are **UI paths**, not endpoint definitions.
 
 The router assembles feature arrays beneath PublicLayout or AppLayout. AppLayout already supplies the sidebar, top bar and `.ot-page` wrapper. Do not duplicate them. Access metadata on the parent supplies `requiresAuth`; roles on each child restrict page access. The same role rules drive navigation. Backend APIs must still check active account status, roles, membership and ownership independently.
 
@@ -68,7 +70,7 @@ Use `try/catch` in the feature to display `error.message` and validation `error.
 
 Pass an AbortController's `signal` to `api.request` and abort on unmount or superseded searches. `AbortError` is cancellation, not a user-facing failure. This client handles JSON, not uploads/downloads; add that support centrally when required.
 
-The frontend expects this **backend integration contract** (not yet implemented):
+The frontend uses this **backend integration contract** (implemented; see backend `docs/api/auth.md`):
 
 | Endpoint            | Expected response                                                                                                                                                  |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -101,7 +103,7 @@ Use `/dev/example` to exercise list loading, empty, retryable error, inline vali
 - Keep feature CSS scoped; shared CSS/components/navigation changes need one coordinated review.
 - Update this guide and style-guide examples if you change a shared pattern.
 
-The Node tests cover HTTP/CSRF behaviour, error normalization, session state, guard decisions and mock fixtures without a backend. Feature APIs and end-to-end authentication still require integration tests once implemented.
+The Node tests (`tests/`, see [tests/README.md](../tests/README.md)) cover HTTP/CSRF behaviour, error normalization, session state, guard decisions, mock fixtures, feature services and composables without a backend. They do not replace checking the pages against the live API in a browser.
 
 ## Development sign-in with real APIs
 

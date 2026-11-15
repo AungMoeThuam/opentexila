@@ -4,7 +4,7 @@
 
 The backend repository now owns the shared development Compose setup. From that checkout, run `npm run stack:up`. It clones this frontend into `../frontend` if missing, preserves existing frontend work, applies pending database migrations, and starts both applications with hot reload. Open <http://localhost:5173>.
 
-Configure this workflow in **backend/.env**. It defaults to real API mode; use `FRONTEND_MOCK_AUTH=true` there for isolated UI development. Authentication APIs still need implementation for real login. Stop with `npm run stack:down` from backend; database data persists. See `backend/docs/DOCKER.md` in that checkout for the full guide.
+Configure this workflow in **backend/.env**. It defaults to real API mode; use `FRONTEND_MOCK_AUTH=true` there for isolated UI development. Stop with `npm run stack:down` from backend; database data persists. See `backend/docs/DOCKER.md` in that checkout for the full guide.
 
 The commands below are for running the frontend separately. Avoid starting both setups on the same host ports.
 
@@ -36,7 +36,7 @@ Compose automatically enables a profile when its service is explicitly targeted,
 
 Both services keep browser requests on `/api/v1` and proxy them to `http://host.docker.internal:3000` by default. The backend and MySQL are **not** started by this Compose file; run them separately from the backend repository.
 
-For live development (authentication endpoints must be implemented):
+For live development against a running backend:
 
 ```sh
 FRONTEND_MOCK_AUTH=false docker compose up --build frontend-dev
